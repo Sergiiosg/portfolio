@@ -101,13 +101,13 @@ function CaseVisual({ kind }) {
       <svg {...common} style={{ color: 'var(--fg-4)' }}>
         {Array.from({ length: 9 }).map((_, i) => {
           const x = 60 + (i % 3) * 70, y = 50 + Math.floor(i / 3) * 70;
-          return <rect key={i} x={x} y={y} width="26" height="26" rx="4" stroke={line} strokeWidth="1.2" opacity={0.35 + (i % 3) * 0.12} />;
+          return <rect key={i} x={x} y={y} width="26" height="26" rx="4" pathLength="1" stroke={line} strokeWidth="1.2" opacity={0.35 + (i % 3) * 0.12} />;
         })}
         {Array.from({ length: 9 }).map((_, i) => {
           const x = 73 + (i % 3) * 70, y = 63 + Math.floor(i / 3) * 70;
-          return <path key={'l' + i} d={`M${x} ${y} L200 120`} stroke={line} strokeWidth="0.7" opacity="0.28" />;
+          return <path key={'l' + i} d={`M${x} ${y} L200 120`} pathLength="1" stroke={line} strokeWidth="0.7" opacity="0.28" />;
         })}
-        <circle cx="200" cy="120" r="17" stroke="var(--accent)" strokeWidth="1.5" />
+        <circle cx="200" cy="120" r="17" pathLength="1" stroke="var(--accent)" strokeWidth="1.5" />
         <circle cx="200" cy="120" r="5" fill="var(--accent)" stroke="none" />
       </svg>
     );
@@ -123,10 +123,10 @@ function CaseVisual({ kind }) {
     }
     return (
       <svg {...common} style={{ color: 'var(--fg-4)' }}>
-        {[60, 120, 180].map((y) => <path key={y} d={`M0 ${y} H400`} stroke={line} strokeWidth="0.8" opacity="0.3" strokeDasharray="3 5" />)}
-        <polyline points={pts.join(' ')} stroke={line} strokeWidth="1.4" opacity="0.75" />
-        <circle cx="260" cy="74" r="6" stroke="var(--accent)" strokeWidth="1.5" />
-        <circle cx="260" cy="74" r="14" stroke="var(--accent)" strokeWidth="0.9" opacity="0.4" />
+        {[60, 120, 180].map((y) => <path key={y} d={`M0 ${y} H400`} pathLength="1" stroke={line} strokeWidth="0.8" opacity="0.3" strokeDasharray="3 5" />)}
+        <polyline points={pts.join(' ')} pathLength="1" stroke={line} strokeWidth="1.4" opacity="0.75" />
+        <circle cx="260" cy="74" r="6" pathLength="1" stroke="var(--accent)" strokeWidth="1.5" />
+        <circle cx="260" cy="74" r="14" pathLength="1" stroke="var(--accent)" strokeWidth="0.9" opacity="0.4" />
       </svg>
     );
   }
@@ -141,11 +141,12 @@ function CaseVisual({ kind }) {
       <svg {...common} style={{ color: 'var(--fg-4)' }}>
         {edges.map(([a, b], i) => (
           <path key={i} d={`M${nodes[a][0]} ${nodes[a][1]} L${nodes[b][0]} ${nodes[b][1]}`}
-                stroke={line} strokeWidth="1" opacity="0.5" />
+                pathLength="1" stroke={line} strokeWidth="1" opacity="0.5" />
         ))}
         {nodes.map(([x, y], i) => (
           <g key={i}>
             <circle cx={x} cy={y} r={i === 0 ? 15 : 10}
+                    pathLength="1"
                     stroke={i === 0 ? 'var(--accent)' : line}
                     strokeWidth={i === 0 ? 1.5 : 1.1}
                     opacity={i === 0 ? 1 : 0.7} />
@@ -161,13 +162,13 @@ function CaseVisual({ kind }) {
     const vals = [38, 62, 47, 83, 71, 96, 58, 88, 74, 108];
     return (
       <svg {...common} style={{ color: 'var(--fg-4)' }}>
-        <path d="M30 196 H370" stroke={line} strokeWidth="1" opacity="0.5" />
+        <path d="M30 196 H370" pathLength="1" stroke={line} strokeWidth="1" opacity="0.5" />
         {vals.map((v, i) => (
           <rect key={i} x={38 + i * 34} y={196 - v} width="18" height={v} rx="2.5"
-                stroke={line} strokeWidth="1.1" opacity={0.3 + i * 0.045} />
+                pathLength="1" stroke={line} strokeWidth="1.1" opacity={0.3 + i * 0.045} />
         ))}
         <polyline points={vals.map((v, i) => `${47 + i * 34},${196 - v - 14}`).join(' ')}
-                  stroke="var(--accent)" strokeWidth="1.4" opacity="0.85" />
+                  pathLength="1" stroke="var(--accent)" strokeWidth="1.4" opacity="0.85" />
         {vals.map((v, i) => (
           <circle key={'d' + i} cx={47 + i * 34} cy={196 - v - 14} r="2" fill="var(--accent)" stroke="none" opacity="0.85" />
         ))}
@@ -186,14 +187,14 @@ function CaseVisual({ kind }) {
         layer.map(([x1, y1], i) =>
           coords[li + 1].map(([x2, y2], j) => (
             <path key={`${li}-${i}-${j}`} d={`M${x1} ${y1} L${x2} ${y2}`}
-                  stroke={line} strokeWidth="0.55" opacity="0.26" />
+                  pathLength="1" stroke={line} strokeWidth="0.55" opacity="0.26" />
           ))
         )
       )}
-      <path d="M70 78 L160 120 L250 78 L340 120" stroke="var(--accent)" strokeWidth="1.5" opacity="0.9" />
+      <path d="M70 78 L160 120 L250 78 L340 120" pathLength="1" stroke="var(--accent)" strokeWidth="1.5" opacity="0.9" />
       {coords.map((layer, li) =>
         layer.map(([x, y], i) => (
-          <circle key={`n${li}-${i}`} cx={x} cy={y} r="6" stroke={line} strokeWidth="1.1"
+          <circle key={`n${li}-${i}`} cx={x} cy={y} r="6" pathLength="1" stroke={line} strokeWidth="1.1"
                   fill="var(--bg-2)" opacity="0.9" />
         ))
       )}
@@ -485,6 +486,7 @@ function TopBar({ copy, lang, setLang, theme, toggleTheme, onJump, onCv }) {
           <span className="cv-label">{copy.ui.cv}</span>
         </button>
       </div>
+      <ReadingProgress />
     </header>
   );
 }
@@ -591,24 +593,175 @@ function Position({ copy }) {
   );
 }
 
+// Apple's momentum projection from Designing Fluid Interfaces: where would
+// this throw land if it decelerated naturally?
+function project(velocity, decelerationRate = 0.998) {
+  return (velocity / 1000) * decelerationRate / (1 - decelerationRate);
+}
+
+function useDragScroll() {
+  const ref = useRef(null);
+  const drag = useRef(null);
+  const moved = useRef(false);
+
+  const onPointerDown = (e) => {
+    // Let touch use native scrolling — it already has momentum and rubber-banding.
+    if (e.pointerType === 'touch' || e.button !== 0) return;
+    const el = ref.current;
+    drag.current = { x: e.clientX, left: el.scrollLeft, t: performance.now(), lastX: e.clientX };
+    moved.current = false;
+    el.setPointerCapture(e.pointerId);
+    el.dataset.dragging = '';
+  };
+
+  const onPointerMove = (e) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.x;
+    if (!moved.current && Math.abs(dx) < 6) return;   // hysteresis before committing
+    moved.current = true;
+    ref.current.scrollLeft = d.left - dx;
+    d.vx = (e.clientX - d.lastX) / Math.max(performance.now() - d.t, 1) * 1000;
+    d.lastX = e.clientX;
+    d.t = performance.now();
+  };
+
+  const onPointerUp = (e) => {
+    const d = drag.current;
+    const el = ref.current;
+    if (!d || !el) return;
+    drag.current = null;
+    delete el.dataset.dragging;
+    if (e.pointerId !== undefined && el.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId);
+    }
+    // Hand the release velocity to the scroll: land where the throw was going.
+    if (moved.current && Math.abs(d.vx || 0) > 40) {
+      el.scrollTo({ left: el.scrollLeft - project(d.vx), behavior: 'smooth' });
+    }
+  };
+
+  // A drag that moved should not also fire the card's click.
+  const suppressClick = (e) => {
+    if (moved.current) { e.preventDefault(); e.stopPropagation(); moved.current = false; }
+  };
+
+  return { ref, moved, handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp, onClickCapture: suppressClick } };
+}
+
+function Marquee() {
+  // Duplicated once so the loop seams invisibly at -50%.
+  const row = DATA.marquee.concat(DATA.marquee);
+  return (
+    <div className="marquee" aria-hidden="true">
+      <div className="marquee__track">
+        {row.map((item, i) => (
+          <span key={i} className="marquee__item">
+            {item}
+            <span className="marquee__sep">/</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ReadingProgress() {
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    let frame = null;
+    const measure = () => {
+      frame = null;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      setP(max > 0 ? Math.min(window.scrollY / max, 1) : 0);
+    };
+    const onScroll = () => { if (frame === null) frame = requestAnimationFrame(measure); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    measure();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
+  }, []);
+  return <span className="topbar__progress" style={{ transform: `scaleX(${p})` }} aria-hidden="true" />;
+}
+
 function Work({ copy, onOpen }) {
   const { work, nav, cases } = copy;
+  const { ref: railRef, moved, handlers } = useDragScroll();
+  const [progress, setProgress] = useState(0);
+  const [edges, setEdges] = useState({ start: true, end: false });
+
+  const measure = useCallback(() => {
+    const el = railRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setProgress(max > 0 ? el.scrollLeft / max : 0);
+    setEdges({ start: el.scrollLeft < 8, end: el.scrollLeft > max - 8 });
+  }, [railRef]);
+
+  useEffect(() => {
+    const el = railRef.current;
+    if (!el) return;
+    let frame = null;
+    const onScroll = () => { if (frame === null) frame = requestAnimationFrame(() => { frame = null; measure(); }); };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', measure);
+    measure();
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', measure);
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
+  }, [measure, railRef]);
+
+  const step = (dir) => {
+    const el = railRef.current;
+    if (!el) return;
+    const card = el.querySelector('.case');
+    const by = card ? card.getBoundingClientRect().width + 20 : el.clientWidth * 0.8;
+    el.scrollBy({ left: dir * by, behavior: 'smooth' });
+  };
+
   return (
-    <section id="trabajo" className="section wrap">
-      <SectionHead n={nav[2].n} label={work.label} />
-      <div style={{ marginBottom: 'clamp(32px, 4vw, 56px)' }}>
-        <h2 className="t-h2" data-reveal style={{ marginBottom: '14px' }}>{work.heading}</h2>
-        <p className="t-body" data-reveal style={{ '--reveal-delay': '60ms' }}>{work.note}</p>
+    <section id="trabajo" className="section">
+      <div className="wrap">
+        <SectionHead n={nav[2].n} label={work.label} />
+        <div className="work__head">
+          <div>
+            <h2 className="t-h2" data-reveal style={{ marginBottom: '14px' }}>{work.heading}</h2>
+            <p className="t-body" data-reveal style={{ '--reveal-delay': '60ms' }}>{work.note}</p>
+          </div>
+          <div className="work__nav" data-reveal>
+            <button className="ctrl ctrl--icon" onClick={() => step(-1)}
+                    disabled={edges.start} aria-label={work.prev}>
+              <Icon.arrowRight style={{ transform: 'rotate(180deg)' }} />
+            </button>
+            <button className="ctrl ctrl--icon" onClick={() => step(1)}
+                    disabled={edges.end} aria-label={work.next}>
+              <Icon.arrowRight />
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="cases">
+      <div className="cases" ref={railRef} {...handlers}
+           role="region" aria-label={work.heading} tabIndex={0}>
         {DATA.cases.map((c, i) => {
           const t = cases[c.id];
           return (
             <article key={c.id}
                      className="case"
                      data-reveal
-                     style={{ '--reveal-delay': `${Math.min(i, 4) * 55}ms` }}>
+                     style={{ '--reveal-delay': `${Math.min(i, 4) * 55}ms` }}
+                     onPointerMove={(e) => {
+                       // Spotlight tracks the cursor across the card surface.
+                       const r = e.currentTarget.getBoundingClientRect();
+                       e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
+                       e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
+                     }}>
               <div className="case__visual"><CaseVisual kind={c.visual} /></div>
               <div className="case__body">
                 <div className="case__meta">
@@ -639,6 +792,12 @@ function Work({ copy, onOpen }) {
             </article>
           );
         })}
+      </div>
+
+      <div className="wrap">
+        <div className="work__progress" role="presentation">
+          <span className="work__progress-bar" style={{ transform: `scaleX(${Math.max(progress, 0.06)})` }} />
+        </div>
       </div>
     </section>
   );
@@ -1006,6 +1165,7 @@ function App() {
         <Hero copy={copy} onJump={jump} />
         <About copy={copy} />
         <Position copy={copy} />
+        <Marquee />
         <Work copy={copy} onOpen={setOpenCase} />
         <Services copy={copy} />
         <Experience copy={copy} />

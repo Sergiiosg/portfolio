@@ -32,6 +32,13 @@ window.DATA = {
     { id: 'uva',  logo: 'assets/logo-uva.png',  logoBg: '#b91458' }
   ],
 
+  // Standards and platforms, shown as a moving band. Language-neutral by nature.
+  marquee: [
+    'ISO/IEC 27001', 'ENS', 'NIS2', 'GDPR', 'ISO/IEC 42001', 'ISO 31000',
+    'Microsoft Azure', 'Cloud Security Benchmark', 'Terraform', 'RBAC',
+    'Power BI', 'SAS', 'Risk Management'
+  ],
+
   stackGroups: [
     { id: 'cloud',  items: ['Microsoft Azure', 'Microsoft Cloud Security Benchmark', 'Terraform'] },
     { id: 'frames', items: ['ISO 27001', 'ISO 31000', 'ISO 42001', 'ENS', 'NIS2', 'GDPR'] },
@@ -131,7 +138,9 @@ window.COPY = {
     work: {
       label: 'Proyectos',
       heading: 'Trabajo seleccionado',
-      note: 'Cinco proyectos, cinco sectores. El detalle está limitado por acuerdos de confidencialidad.'
+      note: 'Cinco proyectos, cinco sectores. El detalle está limitado por acuerdos de confidencialidad.',
+      prev: 'Proyecto anterior',
+      next: 'Proyecto siguiente'
     },
 
     cases: {
@@ -421,7 +430,9 @@ window.COPY = {
     work: {
       label: 'Work',
       heading: 'Selected projects',
-      note: 'Five projects, five sectors. Detail is limited by confidentiality agreements.'
+      note: 'Five projects, five sectors. Detail is limited by confidentiality agreements.',
+      prev: 'Previous project',
+      next: 'Next project'
     },
 
     cases: {

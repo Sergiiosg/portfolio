@@ -320,6 +320,20 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
   pointer-events: none;
 }
 
+/* Reading progress, pinned to the bar's lower edge */
+.topbar__progress {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: var(--fg);
+  transform-origin: left;
+  transform: scaleX(0);
+  opacity: 0;
+  transition: opacity 280ms var(--ease-out);
+  pointer-events: none;
+}
+.topbar[data-stuck] .topbar__progress { opacity: 0.85; }
+
 .brand {
   display: flex;
   align-items: center;
@@ -652,29 +666,134 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
 .position__attr { margin-top: 26px; }
 
 /* ============================================================
+   11b. Marquee — standards as a moving band
+   ============================================================ */
+
+.marquee {
+  overflow: hidden;
+  border-block: 1px solid var(--rule-2);
+  padding-block: 18px;
+  /* Fades at both edges so it reads as continuous, not clipped */
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+
+.marquee__track {
+  display: flex;
+  width: max-content;
+  animation: marquee 58s linear infinite;
+}
+/* Pausing on hover lets anyone actually read a term */
+@media (hover: hover) and (pointer: fine) {
+  .marquee:hover .marquee__track { animation-play-state: paused; }
+}
+
+@keyframes marquee {
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+.marquee__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 28px;
+  padding-right: 28px;
+  font-family: var(--t-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  white-space: nowrap;
+}
+.marquee__sep { color: var(--fg-4); }
+
+/* ============================================================
    12. Work
    ============================================================ */
 
-.cases { display: flex; flex-direction: column; gap: clamp(16px, 2.4vw, 28px); }
+.work__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: clamp(32px, 4vw, 56px);
+}
+.work__nav { display: flex; gap: 8px; flex-shrink: 0; }
+@media (max-width: 720px) { .work__nav { display: none; } }
+
+.ctrl:disabled {
+  opacity: 0.34;
+  cursor: default;
+  transform: none;
+}
+
+/* Horizontal rail. Touch scrolls natively; pointer devices drag. */
+.cases {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(430px, 82vw);
+  gap: 20px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  /* Full-bleed rail whose first card still lines up with the container */
+  --rail-pad: max(var(--gutter), calc((100vw - var(--maxw)) / 2 + var(--gutter)));
+  scroll-padding-inline: var(--rail-pad);
+  padding-inline: var(--rail-pad);
+  padding-block: 4px 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+}
+.cases::-webkit-scrollbar { display: none; }
+.cases[data-dragging] { cursor: grabbing; scroll-snap-type: none; }
+.cases[data-dragging] .case { transition: none; }
 
 .case {
-  display: grid;
-  gap: 0;
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
   border: 1px solid var(--rule);
   border-radius: 18px;
   background: var(--surface);
   overflow: hidden;
   text-align: left;
-  width: 100%;
   position: relative;
+  isolation: isolate;
   transition: border-color 260ms var(--ease-out), box-shadow 260ms var(--ease-out),
               transform 260ms var(--ease-out);
 }
 
-@media (min-width: 860px) {
-  .case { grid-template-columns: 0.92fr 1.08fr; align-items: stretch; }
-  /* Break the rhythm — alternate sides */
-  .case:nth-child(even) .case__visual { order: 2; }
+/* Spotlight follows the cursor across the card */
+.case::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%),
+                              var(--accent-soft), transparent 68%);
+  opacity: 0;
+  transition: opacity 320ms var(--ease-out);
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .case:hover::before { opacity: 1; }
+}
+
+.work__progress {
+  margin-top: 22px;
+  height: 2px;
+  background: var(--rule);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.work__progress-bar {
+  display: block;
+  height: 100%;
+  background: var(--fg);
+  border-radius: 2px;
+  transform-origin: left;
+  transition: transform 180ms var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -711,22 +830,47 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
 
 .case__visual {
   position: relative;
+  z-index: 1;
   background: var(--bg-2);
-  min-height: 210px;
+  height: 190px;
+  flex-shrink: 0;
   overflow: hidden;
   display: grid;
   place-items: center;
+  border-bottom: 1px solid var(--rule-2);
 }
 .case__visual svg {
   width: 100%; height: 100%;
   transition: transform 700ms var(--ease-out);
 }
 
+/* The diagram draws itself in once, when the card first scrolls into view.
+   Shapes carry pathLength="1" so every stroke draws in the same beat
+   regardless of its real length. Opacity is left alone — each shape's own
+   value is what gives the diagram its depth. */
+.case__visual svg [pathLength] {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.case[data-revealed] .case__visual svg [pathLength] {
+  animation: draw 900ms var(--ease-out) forwards;
+}
+.case[data-revealed] .case__visual svg [pathLength]:nth-child(n+4)  { animation-delay: 60ms; }
+.case[data-revealed] .case__visual svg [pathLength]:nth-child(n+9)  { animation-delay: 120ms; }
+.case[data-revealed] .case__visual svg [pathLength]:nth-child(n+15) { animation-delay: 180ms; }
+
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
 .case__body {
-  padding: clamp(24px, 3vw, 40px);
+  position: relative;
+  z-index: 1;
+  padding: clamp(22px, 2.6vw, 30px);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  flex: 1;
 }
 
 .case__meta {
@@ -1194,6 +1338,13 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
   .hero__title em::after { transition: none; transform: scaleX(1); }
   .case:hover { transform: none; }
   .xp__now-dot { animation: none; }
+
+  /* The band holds still; the diagrams show their finished state */
+  .marquee__track { animation: none; transform: none; }
+  .case__visual svg [pathLength] { stroke-dashoffset: 0; }
+  .case[data-revealed] .case__visual svg [pathLength] { animation: none; }
+  .case__visual svg { transform: none !important; }
+  .case::before { display: none; }
 }
 
 @media (prefers-reduced-transparency: reduce) {
