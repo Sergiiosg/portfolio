@@ -74,6 +74,7 @@ window.COPY = {
       role: 'Consultor Senior de Ciberseguridad',
       company: 'KPMG España',
       location: 'Segovia · España',
+      shortRole: 'Ciberseguridad · KPMG',
       tags: ['Gobernanza, riesgo y cumplimiento', 'Cloud Security', 'Auditoría de IA']
     },
 
@@ -103,6 +104,8 @@ window.COPY = {
       backToTop: 'Volver arriba',
       skipToContent: 'Saltar al contenido',
       menu: 'Menú',
+      closeMenu: 'Cerrar menú',
+      openMenu: 'Abrir menú',
       sections: 'Secciones'
     },
 
@@ -366,6 +369,7 @@ window.COPY = {
       role: 'Senior Cybersecurity Consultant',
       company: 'KPMG Spain',
       location: 'Segovia · Spain',
+      shortRole: 'Cybersecurity · KPMG',
       tags: ['Governance, risk & compliance', 'Cloud security', 'AI auditing']
     },
 
@@ -395,6 +399,8 @@ window.COPY = {
       backToTop: 'Back to top',
       skipToContent: 'Skip to content',
       menu: 'Menu',
+      closeMenu: 'Close menu',
+      openMenu: 'Open menu',
       sections: 'Sections'
     },
 

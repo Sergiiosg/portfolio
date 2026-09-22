@@ -461,32 +461,114 @@ function LangToggle({ lang, onChange, copy }) {
    Chrome
    ============================================================ */
 
-function TopBar({ copy, lang, setLang, theme, toggleTheme, onJump, onCv }) {
-  const stuck = useScrolled();
+function MobileMenu({ copy, open, onClose, lang, setLang, onJump, onCv, active }) {
+  const panel = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const id = window.setTimeout(() => panel.current && panel.current.focus(), 60);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+      window.clearTimeout(id);
+    };
+  }, [open, onClose]);
+
+  const go = (id) => { onClose(); onJump(id); };
+
   return (
-    <header className="topbar" data-stuck={stuck || undefined}>
+    <React.Fragment>
+      <div className="sheet-scrim" data-open={open || undefined} onClick={onClose} aria-hidden="true" />
+      <div className="sheet"
+           data-open={open || undefined}
+           aria-hidden={!open || undefined}
+           role="dialog"
+           aria-modal="true"
+           aria-label={copy.ui.menu}
+           tabIndex={-1}
+           ref={panel}>
+        <nav className="sheet__nav">
+          {copy.nav.map((item, i) => (
+            <button key={item.id}
+                    className="sheet__link"
+                    style={{ '--i': i }}
+                    aria-current={active === item.id ? 'true' : undefined}
+                    onClick={() => go(item.id)}>
+              <span className="t-mono">{item.n}</span>
+              <span className="sheet__label">{item.label}</span>
+              <Icon.arrowRight className="icon sheet__arrow" />
+            </button>
+          ))}
+        </nav>
+
+        <div className="sheet__foot">
+          <LangToggle lang={lang} onChange={setLang} copy={copy} />
+          <button className="ctrl ctrl--solid" onClick={() => { onClose(); onCv(); }}>
+            <Icon.download />
+            {copy.ui.cv}
+          </button>
+        </div>
+      </div>
+    </React.Fragment>
+  );
+}
+
+function TopBar({ copy, lang, setLang, theme, toggleTheme, onJump, onCv, active }) {
+  const stuck = useScrolled();
+  const [menu, setMenu] = useState(false);
+  const closeMenu = useCallback(() => setMenu(false), []);
+  const themeLabel = theme === 'dark' ? copy.ui.themeLight : copy.ui.themeDark;
+
+  return (
+    <header className="topbar" data-stuck={stuck || menu || undefined}>
       <button className="brand" onClick={() => onJump('inicio')}>
         <span className="brand__mark" aria-hidden="true">SF</span>
         <span className="brand__text">
           <span className="brand__name">{copy.identity.name}</span>
-          <span className="brand__role">{copy.identity.role} · {copy.identity.company}</span>
+          {/* Full title on wide screens, a tight one where space is scarce */}
+          <span className="brand__role brand__role--full">
+            {copy.identity.role} · {copy.identity.company}
+          </span>
+          <span className="brand__role brand__role--short">{copy.identity.shortRole}</span>
         </span>
       </button>
 
       <div className="topbar__actions">
-        <LangToggle lang={lang} onChange={setLang} copy={copy} />
-        <button className="ctrl ctrl--icon"
-                onClick={toggleTheme}
-                aria-label={theme === 'dark' ? copy.ui.themeLight : copy.ui.themeDark}
-                title={theme === 'dark' ? copy.ui.themeLight : copy.ui.themeDark}>
+        <div className="topbar__desktop">
+          <LangToggle lang={lang} onChange={setLang} copy={copy} />
+        </div>
+
+        <button className="ctrl ctrl--icon" onClick={toggleTheme}
+                aria-label={themeLabel} title={themeLabel}>
           {theme === 'dark' ? <Icon.sun /> : <Icon.moon />}
         </button>
-        <button className="ctrl" onClick={onCv}>
-          <Icon.download />
-          <span className="cv-label">{copy.ui.cv}</span>
+
+        <div className="topbar__desktop">
+          <button className="ctrl" onClick={onCv}>
+            <Icon.download />
+            {copy.ui.cv}
+          </button>
+        </div>
+
+        <button className="ctrl ctrl--icon topbar__burger"
+                onClick={() => setMenu((v) => !v)}
+                aria-expanded={menu}
+                aria-label={menu ? copy.ui.closeMenu : copy.ui.openMenu}>
+          <span className="burger" data-open={menu || undefined} aria-hidden="true">
+            <span /><span />
+          </span>
         </button>
       </div>
+
       <ReadingProgress />
+
+      <MobileMenu copy={copy} open={menu} onClose={closeMenu}
+                  lang={lang} setLang={setLang}
+                  onJump={onJump} onCv={onCv} active={active} />
     </header>
   );
 }
@@ -1157,7 +1239,7 @@ function App() {
 
       <TopBar copy={copy} lang={lang} setLang={changeLang}
               theme={resolvedTheme} toggleTheme={toggleTheme}
-              onJump={jump} onCv={downloadCv} />
+              onJump={jump} onCv={downloadCv} active={active} />
 
       <Rail copy={copy} active={active} onJump={jump} />
 
