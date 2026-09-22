@@ -1,994 +1,1029 @@
-// Sergio Fagúndez — Portfolio
-// Modern consulting × quiet luxury. Spanish copy, editorial restraint.
+// Sergio Fagúndez Manso — Portfolio
+// Apple design language. One typeface, one accent, interruptible motion.
 
-const { useState, useEffect, useRef, useCallback, useMemo } = React;
+const { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } = React;
 
-// ---------- Data ----------
+const DATA = window.DATA;
+const COPY = window.COPY;
 
-const NAV = [
-{ id: 'inicio', n: '01', label: 'Inicio' },
-{ id: 'perfil', n: '02', label: 'Perfil' },
-{ id: 'trabajo', n: '03', label: 'Proyectos' },
-{ id: 'expertise', n: '04', label: 'Áreas' },
-{ id: 'experiencia', n: '05', label: 'Experiencia' },
-{ id: 'contacto', n: '06', label: 'Contacto' }];
+const SECTION_IDS = ['inicio', 'perfil', 'trabajo', 'expertise', 'experiencia', 'contacto'];
 
+/* ============================================================
+   Icons — one stroke weight throughout (1.6), custom set
+   ============================================================ */
 
-const CASES = [
-{
-  id: 'convergence',
-  n: '01',
-  image: 'https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=1600&q=85&auto=format&fit=crop',
-  sector: 'Sector Ferrocarriles',
-  year: '2024 — 2025',
-  title: 'Proyecto Convergence — centralización y resiliencia en infraestructura crítica',
-  summary:
-  'Centralización de aplicaciones corporativas y despliegue de seguridad en entornos virtualizados para una infraestructura crítica del sector ferroviario.',
-  problem:
-  'La infraestructura presentaba dispersión de aplicaciones, recursos infrautilizados y una superficie expuesta sin protección homogénea — todo ello en un entorno crítico donde la continuidad de operación es innegociable.',
-  context:
-  'Sector ferroviario, sistemas heterogéneos en entornos virtualizados, exigencia regulatoria alta (ISO 27001, ENS) y cero margen de tolerancia a interrupciones.',
-  approach: [
-  'Centralización y gestión de aplicaciones corporativas',
-  'Optimización de infraestructura y consolidación de recursos',
-  'Despliegue de soluciones antimalware en entornos virtualizados',
-  'Diseño de dashboards Power BI para KPIs operativos y de seguridad',
-  'Análisis y gestión integral de riesgos sobre el marco ISO 27001 / ENS'],
-
-  outcome: [
-  { metric: 'ISO 27001', label: 'Marco normativo desplegado sobre infraestructura ferroviaria crítica' },
-  { metric: 'ENS', label: 'Cumplimiento del Esquema Nacional de Seguridad' },
-  { metric: 'Power BI', label: 'KPIs operativos y de seguridad en tiempo real' }],
-
-  stack: ['ISO 27001', 'ENS', 'Power BI', 'Antimalware', 'Virtualización']
-},
-{
-  id: 'opsec',
-  n: '02',
-  image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=85&auto=format&fit=crop',
-  sector: 'Sector Público',
-  year: '2024 — 2025',
-  title: 'Proyecto OpSec — analítica avanzada para gestión del riesgo público',
-  summary:
-  'Analítica de datos en SAS y monitorización continua para soportar decisiones y cumplimiento normativo en una entidad del sector público.',
-  problem:
-  'La entidad necesitaba transformar datos dispersos en evidencia ejecutable: identificar, evaluar y gestionar riesgos en un entorno regulado por ENS, ISO/IEC 27001 y la directiva NIS2, con reporte continuo a dirección.',
-  context:
-  'Sector público, exigencia regulatoria múltiple (ENS, ISO 27001, NIS2), datos heterogéneos y necesidad de marcos de control y monitorización continua.',
-  approach: [
-  'Análisis de datos en SAS para soporte a decisiones y gestión del riesgo',
-  'Cumplimiento normativo: ENS, ISO/IEC 27001, NIS Directive (NIS2)',
-  'Marcos de control y dashboards de monitorización continua',
-  'Identificación, evaluación y gestión de riesgos del SI'],
-
-  outcome: [
-  { metric: 'NIS2', label: 'Cumplimiento de la directiva sobre entidad pública' },
-  { metric: 'SAS', label: 'Analítica avanzada para gestión continua del riesgo' },
-  { metric: 'Riesgos', label: 'Identificación, evaluación y control de riesgos del SI' }],
-
-  stack: ['SAS', 'ISO 27001', 'ENS', 'NIS2', 'Risk Management']
-},
-{
-  id: 'atlas',
-  n: '03',
-  image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1600&q=85&auto=format&fit=crop',
-  sector: 'Sector Energético',
-  year: '2024 — 2025',
-  title: 'Proyecto Atlas — Microsoft Cloud Security Benchmark en Azure productivo',
-  summary:
-  'Implantación del Microsoft Cloud Security Benchmark, automatización con Terraform y modelo de identidades en Azure para un cliente del sector energético.',
-  problem:
-  'Una arquitectura cloud productiva sin un benchmark de seguridad consistente, con riesgos de configuración, identidad y gobernanza que comprometían el cumplimiento y la eficiencia.',
-  context:
-  'Sector energético, infraestructura crítica en Microsoft Azure, requisitos elevados de seguridad, gobernanza y rendimiento en entornos productivos.',
-  approach: [
-  'Implementación del Microsoft Cloud Security Benchmark en Azure',
-  'Gestión de identidades y accesos (IAM) mediante RBAC',
-  'Automatización de infraestructura con Terraform',
-  'Optimización de arquitectura cloud (seguridad, gobernanza, rendimiento)',
-  'Homologación de componentes y plataformas'],
-
-  outcome: [
-  { metric: 'MCSB', label: 'Microsoft Cloud Security Benchmark implantado' },
-  { metric: 'IaC', label: 'Infraestructura automatizada con Terraform' },
-  { metric: 'RBAC', label: 'Modelo de identidades y accesos consolidado' }],
-
-  stack: ['Microsoft Azure', 'MCSB', 'Terraform', 'RBAC', 'IAM']
-},
-{
-  id: 'insight',
-  n: '04',
-  image: 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=1600&q=85&auto=format&fit=crop',
-  sector: 'Sector Automoción',
-  year: '2024 — 2025',
-  title: 'Proyecto Insight — dashboards de incidencias y KPIs para decisión estratégica',
-  summary:
-  'Diseño de dashboards Power BI para monitorización de incidencias, KPIs y soporte a decisiones estratégicas en un cliente del sector automoción.',
-  problem:
-  'La organización generaba grandes volúmenes de datos operativos sin transformarlos en visibilidad ejecutiva. Las decisiones estratégicas se tomaban sin métricas consolidadas ni cadencia clara.',
-  context:
-  'Sector automoción, datos operativos distribuidos, necesidad de reporte directivo periódico y soporte a la toma de decisiones.',
-  approach: [
-  'Diseño de dashboards Power BI para incidencias y KPIs',
-  'Análisis y visualización de datos para decisiones estratégicas',
-  'Modelado de indicadores de seguridad y operación',
-  'Integración con fuentes de datos heterogéneas'],
-
-  outcome: [
-  { metric: 'KPIs', label: 'Indicadores de incidencias, seguridad y operación' },
-  { metric: 'Power BI', label: 'Cuadro de mando para comité directivo' },
-  { metric: 'Insights', label: 'Datos heterogéneos convertidos en evidencia accionable' }],
-
-  stack: ['Power BI', 'SQL', 'Data Modeling', 'KPIs']
-},
-{
-  id: 'ai-audit',
-  n: '05',
-  image: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=1600&q=85&auto=format&fit=crop',
-  sector: 'Consultoría · IA',
-  year: '2025',
-  title: 'Proyecto AI Audit — auditoría de sistemas de IA bajo ISO/IEC 42001',
-  summary:
-  'Auditorías internas y análisis de riesgos sobre sistemas de Inteligencia Artificial conforme al estándar ISO/IEC 42001.',
-  problem:
-  'La adopción de sistemas de IA avanzaba más rápido que su gobierno. Faltaba un marco de auditoría y gestión de riesgos específico para IA, alineado al ciclo de vida completo del sistema.',
-  context:
-  'Sector consultoría, sistemas de IA en distintos estados de madurez, exigencia regulatoria emergente y necesidad de un marco verificable y auditable.',
-  approach: [
-  'Auditorías internas conformes a ISO/IEC 42001',
-  'Análisis de riesgos sobre sistemas de Inteligencia Artificial',
-  'Aseguramiento del cumplimiento durante todo el ciclo de vida',
-  'Mejora continua sobre los hallazgos identificados'],
-
-  outcome: [
-  { metric: 'ISO 42001', label: 'Marco de auditoría sobre sistemas de IA implantado' },
-  { metric: 'Lifecycle', label: 'Cobertura end-to-end del sistema auditado' },
-  { metric: 'Hallazgos', label: 'Mejora continua sobre evidencias verificables' }],
-
-  stack: ['ISO/IEC 42001', 'AI Governance', 'Risk Management', 'Auditoría']
-}];
-
-
-const SERVICES = [
-{
-  n: '01',
-  title: 'Gobernanza, riesgos y cumplimiento',
-  desc: 'ISO/IEC 27001, ISO 31000, ISO/IEC 42001 y ENS. Marcos de gobernanza, riesgo y cumplimiento como capacidad continua, no como ejercicio puntual.'
-},
-{
-  n: '02',
-  title: 'Cloud Security',
-  desc: 'Microsoft Azure, Microsoft Cloud Security Benchmark, RBAC, IAM y automatización con Terraform. Arquitectura segura, gobernada y eficiente.'
-},
-{
-  n: '03',
-  title: 'Risk Management & Auditoría TI',
-  desc: 'Análisis y gestión integral de riesgos en entornos corporativos y críticos. Auditorías ENS, internas y sobre sistemas de IA bajo ISO/IEC 42001.'
-},
-{
-  n: '04',
-  title: 'Data & Reporting',
-  desc: 'Dashboards Power BI para KPIs de seguridad y riesgo, analítica avanzada en SAS y reporte directivo que reduce el tiempo de decisión.'
-}];
-
-
-const EXPERIENCE = [
-{
-  period: 'Ago. 2024 — Actualidad',
-  company: 'PwC España',
-  logo: 'assets/logo-pwc.png',
-  logoBg: '#ffffff',
-  logoPad: true,
-  role: 'Cybersecurity and Privacy Associate · Business Security Solutions',
-  location: 'Madrid · Jornada completa',
-  impact: [
-  'Consultor especializado en gobernanza, riesgos y cumplimiento, junto a Cloud Security, para clientes nacionales e internacionales en sectores estratégicos y críticos.',
-  'Participación en proyectos de Ferrocarriles, Sector Público, Energético, Automoción y Consultoría / IA.',
-  'Implantación del Microsoft Cloud Security Benchmark en entornos Azure productivos.',
-  'Diseño de dashboards Power BI para monitorización de KPIs de seguridad y riesgo, reduciendo el tiempo de análisis y reporte directivo.',
-  'Auditorías internas y análisis de riesgos sobre sistemas de IA bajo ISO/IEC 42001.']
-
-},
-{
-  period: 'Feb. 2024 — May. 2024',
-  company: 'Atlas Cloud S.L.',
-  logo: 'assets/logo-atlas.png',
-  logoBg: '#0f2545',
-  role: 'Salesforce Developer · Contrato de prácticas',
-  location: 'Segovia · Híbrido',
-  impact: [
-  'Desarrollo de soluciones a medida en Salesforce (Apex, Salesforce.com) para mejora de procesos de seguimiento y gestión de clientes.',
-  'Mejora de la metodología de ventas y fidelización aplicando buenas prácticas de modelado y automatización del CRM.',
-  'Diseño y personalización de dashboards y reportes para soportar la toma de decisiones basada en datos.',
-  'Integración de Salesforce con otras plataformas para reducir la fragmentación de datos.']
-
-}];
-
-
-const EDUCATION = [
-{
-  period: 'Sept. 2025 — Oct. 2026',
-  institution: 'UNIR',
-  logo: 'assets/logo-unir.png',
-  logoBg: '#0a8bd6',
-  title: 'Máster Universitario en Ciberseguridad',
-  detail: 'Cloud Security, Hacking ético, ISO/IEC 27001 y entornos críticos. Alineado a ENS, NIS2 y GDPR.'
-},
-{
-  period: '2020 — 2024',
-  institution: 'Universidad de Valladolid',
-  logo: 'assets/logo-uva.png',
-  logoBg: '#b91458',
-  title: 'Grado en Ingeniería Informática',
-  detail: 'Escuela de Ingeniería Informática (SG). Ingeniería del software, IA, ciberseguridad, bases de datos, redes y metodologías ágiles.'
-}];
-
-
-const CERTIFICATIONS = [
-'MBA online — ThePowerMBA',
-'AZ-900 — Microsoft Certified: Azure Fundamentals',
-'Esquema Nacional de Seguridad (CCN)',
-'Auditorías en el ENS (CCN)',
-'Análisis y Gestión de Riesgos de los SSII (CCN)',
-'Certificación en IA — ThePowerIA',
-'+10 certificaciones Google en GenAI, LLMs y Vertex AI',
-'Certified Scrum Master — Scrum Manager'];
-
-
-const STACK = {
-  'Cloud & Security': ['Microsoft Azure', 'Microsoft Cloud Security Benchmark', 'Terraform'],
-  'Frameworks': ['ISO 27001', 'ISO 31000', 'ISO 42001', 'ENS', 'NIS2', 'GDPR'],
-  'Data': ['Power BI', 'SAS', 'SQL'],
-  'Dev': ['Java', 'Python', 'JavaScript', 'MERN Stack', 'Apex (Salesforce)'],
-  'Ways of working': ['Scrum', 'Agile']
+const Icon = {
+  arrowRight: (p) => (
+    <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...p}>
+      <path d="M3 8h10M9 4l4 4-4 4" />
+    </svg>
+  ),
+  arrowUp: (p) => (
+    <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...p}>
+      <path d="M8 13V3M4 7l4-4 4 4" />
+    </svg>
+  ),
+  download: (p) => (
+    <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...p}>
+      <path d="M8 2v8M4.5 7L8 10.5 11.5 7M2.5 13h11" />
+    </svg>
+  ),
+  close: (p) => (
+    <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.6" strokeLinecap="round" aria-hidden="true" {...p}>
+      <path d="M4 4l8 8M12 4l-8 8" />
+    </svg>
+  ),
+  check: (p) => (
+    <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...p}>
+      <path d="M3 8.5l3.2 3.2L13 5" />
+    </svg>
+  ),
+  alert: (p) => (
+    <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.6" strokeLinecap="round" aria-hidden="true" {...p}>
+      <circle cx="8" cy="8" r="6.2" /><path d="M8 5v3.6M8 11h.01" />
+    </svg>
+  ),
+  info: (p) => (
+    <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.6" strokeLinecap="round" aria-hidden="true" {...p}>
+      <circle cx="8" cy="8" r="6.2" /><path d="M8 7.4v3.4M8 5h.01" />
+    </svg>
+  ),
+  sun: (p) => (
+    <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.6" strokeLinecap="round" aria-hidden="true" {...p}>
+      <circle cx="8" cy="8" r="3" />
+      <path d="M8 1v1.5M8 13.5V15M15 8h-1.5M2.5 8H1M12.95 3.05l-1.06 1.06M4.11 11.89l-1.06 1.06M12.95 12.95l-1.06-1.06M4.11 4.11L3.05 3.05" />
+    </svg>
+  ),
+  moon: (p) => (
+    <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...p}>
+      <path d="M13.5 9.6A5.8 5.8 0 016.4 2.5a5.8 5.8 0 107.1 7.1z" />
+    </svg>
+  ),
+  dot: (p) => (
+    <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.6" aria-hidden="true" {...p}>
+      <circle cx="8" cy="8" r="2.4" />
+    </svg>
+  ),
+  mail: (p) => (
+    <svg className="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+         strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...p}>
+      <rect x="1.8" y="3.4" width="12.4" height="9.2" rx="1.6" /><path d="M2.4 4.6L8 8.6l5.6-4" />
+    </svg>
+  )
 };
 
-const CONTACT = {
-  email: 'sergio.fagundez.m@gmail.com',
-  phone: '+34 685 27 22 99',
-  linkedin: 'https://www.linkedin.com/in/sergiofagundezmanso/'
-};
+/* ============================================================
+   Case visuals — generated SVG, no external images
+   ============================================================ */
 
-// ---------- Hooks ----------
+function CaseVisual({ kind }) {
+  const common = {
+    viewBox: '0 0 400 240',
+    preserveAspectRatio: 'xMidYMid slice',
+    fill: 'none',
+    'aria-hidden': 'true'
+  };
+  const line = 'currentColor';
 
-function useScrollReveal() {
+  if (kind === 'grid') {
+    // Convergence — a dispersed grid consolidating toward one core
+    return (
+      <svg {...common} style={{ color: 'var(--fg-4)' }}>
+        {Array.from({ length: 9 }).map((_, i) => {
+          const x = 60 + (i % 3) * 70, y = 50 + Math.floor(i / 3) * 70;
+          return <rect key={i} x={x} y={y} width="26" height="26" rx="4" stroke={line} strokeWidth="1.2" opacity={0.35 + (i % 3) * 0.12} />;
+        })}
+        {Array.from({ length: 9 }).map((_, i) => {
+          const x = 73 + (i % 3) * 70, y = 63 + Math.floor(i / 3) * 70;
+          return <path key={'l' + i} d={`M${x} ${y} L200 120`} stroke={line} strokeWidth="0.7" opacity="0.28" />;
+        })}
+        <circle cx="200" cy="120" r="17" stroke="var(--accent)" strokeWidth="1.5" />
+        <circle cx="200" cy="120" r="5" fill="var(--accent)" stroke="none" />
+      </svg>
+    );
+  }
+
+  if (kind === 'signal') {
+    // OpSec — continuous monitoring, one anomaly flagged
+    const pts = [];
+    for (let i = 0; i <= 80; i++) {
+      const x = i * 5;
+      const y = 120 + Math.sin(i * 0.38) * 26 + Math.sin(i * 0.11) * 15 + (i === 52 ? -46 : 0);
+      pts.push(`${x},${y.toFixed(1)}`);
+    }
+    return (
+      <svg {...common} style={{ color: 'var(--fg-4)' }}>
+        {[60, 120, 180].map((y) => <path key={y} d={`M0 ${y} H400`} stroke={line} strokeWidth="0.8" opacity="0.3" strokeDasharray="3 5" />)}
+        <polyline points={pts.join(' ')} stroke={line} strokeWidth="1.4" opacity="0.75" />
+        <circle cx="260" cy="74" r="6" stroke="var(--accent)" strokeWidth="1.5" />
+        <circle cx="260" cy="74" r="14" stroke="var(--accent)" strokeWidth="0.9" opacity="0.4" />
+      </svg>
+    );
+  }
+
+  if (kind === 'topology') {
+    // Atlas — cloud identity topology, RBAC branches
+    const nodes = [
+      [200, 62], [108, 122], [292, 122], [70, 186], [150, 186], [250, 186], [330, 186]
+    ];
+    const edges = [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6]];
+    return (
+      <svg {...common} style={{ color: 'var(--fg-4)' }}>
+        {edges.map(([a, b], i) => (
+          <path key={i} d={`M${nodes[a][0]} ${nodes[a][1]} L${nodes[b][0]} ${nodes[b][1]}`}
+                stroke={line} strokeWidth="1" opacity="0.5" />
+        ))}
+        {nodes.map(([x, y], i) => (
+          <g key={i}>
+            <circle cx={x} cy={y} r={i === 0 ? 15 : 10}
+                    stroke={i === 0 ? 'var(--accent)' : line}
+                    strokeWidth={i === 0 ? 1.5 : 1.1}
+                    opacity={i === 0 ? 1 : 0.7} />
+            {i === 0 && <circle cx={x} cy={y} r="4.5" fill="var(--accent)" stroke="none" />}
+          </g>
+        ))}
+      </svg>
+    );
+  }
+
+  if (kind === 'bars') {
+    // Insight — KPI bars with a trend line above
+    const vals = [38, 62, 47, 83, 71, 96, 58, 88, 74, 108];
+    return (
+      <svg {...common} style={{ color: 'var(--fg-4)' }}>
+        <path d="M30 196 H370" stroke={line} strokeWidth="1" opacity="0.5" />
+        {vals.map((v, i) => (
+          <rect key={i} x={38 + i * 34} y={196 - v} width="18" height={v} rx="2.5"
+                stroke={line} strokeWidth="1.1" opacity={0.3 + i * 0.045} />
+        ))}
+        <polyline points={vals.map((v, i) => `${47 + i * 34},${196 - v - 14}`).join(' ')}
+                  stroke="var(--accent)" strokeWidth="1.4" opacity="0.85" />
+        {vals.map((v, i) => (
+          <circle key={'d' + i} cx={47 + i * 34} cy={196 - v - 14} r="2" fill="var(--accent)" stroke="none" opacity="0.85" />
+        ))}
+      </svg>
+    );
+  }
+
+  // lattice — AI Audit: layered network with one audited path highlighted
+  const layers = [[70, 4], [160, 5], [250, 5], [340, 3]];
+  const coords = layers.map(([x, count]) =>
+    Array.from({ length: count }, (_, i) => [x, 120 + (i - (count - 1) / 2) * 42])
+  );
+  return (
+    <svg {...common} style={{ color: 'var(--fg-4)' }}>
+      {coords.slice(0, -1).map((layer, li) =>
+        layer.map(([x1, y1], i) =>
+          coords[li + 1].map(([x2, y2], j) => (
+            <path key={`${li}-${i}-${j}`} d={`M${x1} ${y1} L${x2} ${y2}`}
+                  stroke={line} strokeWidth="0.55" opacity="0.26" />
+          ))
+        )
+      )}
+      <path d="M70 78 L160 120 L250 78 L340 120" stroke="var(--accent)" strokeWidth="1.5" opacity="0.9" />
+      {coords.map((layer, li) =>
+        layer.map(([x, y], i) => (
+          <circle key={`n${li}-${i}`} cx={x} cy={y} r="6" stroke={line} strokeWidth="1.1"
+                  fill="var(--bg-2)" opacity="0.9" />
+        ))
+      )}
+    </svg>
+  );
+}
+
+/* ============================================================
+   Toasts — Sonner's behaviour: stack, expand on hover, swipe out
+   ============================================================ */
+
+const ToastCtx = React.createContext(() => {});
+
+const MAX_VISIBLE = 3;
+const TOAST_LIFE = 4000;
+const GAP = 12;
+
+function Toaster({ toasts, dismiss }) {
+  const [expanded, setExpanded] = useState(false);
+  const [heights, setHeights] = useState({});
+
+  const setHeight = useCallback((id, h) => {
+    setHeights((prev) => (prev[id] === h ? prev : { ...prev, [id]: h }));
+  }, []);
+
+  // Newest first, so index 0 is the front of the stack.
+  const ordered = useMemo(() => [...toasts].reverse(), [toasts]);
+
+  return (
+    <ol className="toaster"
+        tabIndex={-1}
+        onMouseEnter={() => setExpanded(true)}
+        onMouseLeave={() => setExpanded(false)}
+        style={{ height: expanded ? ordered.slice(0, MAX_VISIBLE).reduce((a, t) => a + (heights[t.id] || 56) + GAP, 0) : undefined }}>
+      {ordered.map((t, i) => (
+        <Toast key={t.id} toast={t} index={i} expanded={expanded}
+               heights={heights} ordered={ordered}
+               onHeight={setHeight} onDismiss={dismiss} />
+      ))}
+    </ol>
+  );
+}
+
+function Toast({ toast, index, expanded, heights, ordered, onHeight, onDismiss }) {
+  const ref = useRef(null);
+  const timer = useRef(null);
+  const drag = useRef(null);
+  const [swiping, setSwiping] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [removed, setRemoved] = useState(false);
+
+  // Measure so the expanded stack can lay itself out precisely.
+  useLayoutEffect(() => {
+    if (ref.current) onHeight(toast.id, ref.current.getBoundingClientRect().height);
+  }, [toast.id, toast.message, onHeight]);
+
+  const close = useCallback(() => {
+    setRemoved(true);
+    window.setTimeout(() => onDismiss(toast.id), 240);
+  }, [toast.id, onDismiss]);
+
+  // Timer pauses while the stack is expanded (the user is reading it).
   useEffect(() => {
-    const els = document.querySelectorAll('[data-reveal]');
+    if (removed || expanded || toast.duration === Infinity) return;
+    timer.current = window.setTimeout(close, toast.duration || TOAST_LIFE);
+    return () => window.clearTimeout(timer.current);
+  }, [removed, expanded, toast.duration, close]);
+
+  const onPointerDown = (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    drag.current = { x: e.clientX, t: performance.now(), moved: false };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e) => {
+    if (!drag.current) return;
+    const dx = e.clientX - drag.current.x;
+    // Hysteresis: commit to the gesture only past ~8px.
+    if (!drag.current.moved && Math.abs(dx) < 8) return;
+    drag.current.moved = true;
+    setSwiping(true);
+    // Toaster sits right, so rightward is the dismiss direction.
+    // Leftward gets rubber-banded rather than hard-stopped.
+    setOffset(dx > 0 ? dx : dx * 0.22);
+  };
+
+  const onPointerUp = (e) => {
+    if (!drag.current) return;
+    const dx = e.clientX - drag.current.x;
+    const dt = performance.now() - drag.current.t;
+    const velocity = Math.abs(dx) / Math.max(dt, 1);
+    drag.current = null;
+    setSwiping(false);
+    // Fast flick dismisses regardless of distance.
+    if (dx > 0 && (dx > 88 || velocity > 0.11)) close();
+    else setOffset(0);
+  };
+
+  // Stack geometry: front card sits flush, cards behind scale down and peek.
+  const behind = index;
+  let ty, sc, op;
+  if (expanded) {
+    ty = -ordered.slice(0, index).reduce((a, t) => a + (heights[t.id] || 56) + GAP, 0);
+    sc = 1;
+    op = index < MAX_VISIBLE ? 1 : 0;
+  } else {
+    ty = -behind * 15;
+    sc = 1 - behind * 0.055;
+    op = behind < MAX_VISIBLE ? 1 : 0;
+  }
+
+  const style = {
+    '--ty': `${ty}px`,
+    '--tx': `${offset}px`,
+    '--sc': sc,
+    '--op': op,
+    zIndex: ordered.length - index
+  };
+
+  const Glyph = toast.type === 'success' ? Icon.check
+              : toast.type === 'error' ? Icon.alert
+              : Icon.info;
+
+  return (
+    <li ref={ref}
+        className="toast"
+        data-type={toast.type || 'info'}
+        data-swiping={swiping || undefined}
+        data-removed={removed || undefined}
+        style={style}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}>
+      <Glyph className="icon toast__icon" />
+      <span className="toast__text">{toast.message}</span>
+      <button className="toast__close" onClick={close} aria-label="Cerrar / Close">
+        <Icon.close />
+      </button>
+    </li>
+  );
+}
+
+function useToastStore() {
+  const [toasts, setToasts] = useState([]);
+  const seq = useRef(0);
+
+  const push = useCallback((message, opts = {}) => {
+    const id = ++seq.current;
+    setToasts((prev) => [...prev.slice(-5), { id, message, ...opts }]);
+    return id;
+  }, []);
+
+  const dismiss = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  return { toasts, push, dismiss };
+}
+
+/* ============================================================
+   Hooks
+   ============================================================ */
+
+function useReveal(deps) {
+  useEffect(() => {
+    const els = document.querySelectorAll('[data-reveal]:not([data-revealed])');
+    if (!els.length) return;
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.setAttribute('data-revealed', '');
-            io.unobserve(e.target);
-          }
+          if (!e.isIntersecting) return;
+          e.target.setAttribute('data-revealed', '');
+          io.unobserve(e.target);
         });
       },
-      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+      { threshold: 0.1, rootMargin: '0px 0px -6% 0px' }
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, []);
+  }, deps);
 }
 
 function useActiveSection(ids) {
   const [active, setActive] = useState(ids[0]);
   useEffect(() => {
-    const handler = () => {
-      const top = window.scrollY || document.documentElement.scrollTop || 0;
-      const viewportH = window.innerHeight;
-      const probe = top + viewportH * 0.3;
+    let frame = null;
+    const measure = () => {
+      frame = null;
+      const probe = window.scrollY + window.innerHeight * 0.32;
       let current = ids[0];
-      ids.forEach((id) => {
+      for (const id of ids) {
         const el = document.getElementById(id);
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        const offset = rect.top + top;
-        if (offset <= probe) current = id;
-      });
+        if (el && el.offsetTop <= probe) current = id;
+      }
       setActive(current);
     };
-    window.addEventListener('scroll', handler, { passive: true });
-    handler();
-    return () => window.removeEventListener('scroll', handler);
+    const onScroll = () => { if (frame === null) frame = requestAnimationFrame(measure); };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    measure();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
   }, [ids]);
   return active;
 }
 
-// ---------- UI primitives ----------
-
-function MagneticButton({ children, onClick, variant = 'solid', ...rest }) {
-  const ref = useRef(null);
-  const [t, setT] = useState({ x: 0, y: 0 });
-  const onMove = (e) => {
-    const r = ref.current.getBoundingClientRect();
-    const x = e.clientX - (r.left + r.width / 2);
-    const y = e.clientY - (r.top + r.height / 2);
-    setT({ x: x * 0.25, y: y * 0.35 });
-  };
-  const reset = () => setT({ x: 0, y: 0 });
-  return (
-    <button
-      ref={ref}
-      onMouseMove={onMove}
-      onMouseLeave={reset}
-      onClick={onClick}
-      className={`magnetic magnetic--${variant}`}
-      style={{ transform: `translate(${t.x}px, ${t.y}px)` }}
-      {...rest}>
-      
-      <span style={{ display: 'inline-block', transform: `translate(${t.x * 0.4}px, ${t.y * 0.4}px)` }}>
-        {children}
-      </span>
-    </button>);
-
+function useScrolled(threshold = 12) {
+  const [past, setPast] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setPast(window.scrollY > threshold);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [threshold]);
+  return past;
 }
 
-function SectionLabel({ n, label }) {
-  return (
-    <div className="section-label" data-reveal>
-      <span className="section-label__n">{n}</span>
-      <span className="section-label__line" aria-hidden="true" />
-      <span className="section-label__label">{label}</span>
-    </div>);
-
+function usePersisted(key, initial) {
+  const [value, setValue] = useState(() => {
+    try {
+      const stored = window.localStorage.getItem(key);
+      return stored === null ? initial : stored;
+    } catch { return initial; }
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem(key, value); } catch { /* private mode */ }
+  }, [key, value]);
+  return [value, setValue];
 }
 
-// ---------- Sections ----------
+/* ============================================================
+   Primitives
+   ============================================================ */
 
-function SideRail({ active, onJump }) {
+function SectionHead({ n, label, reveal = true }) {
   return (
-    <nav className="side-rail" aria-label="Secciones">
-      <ul>
-        {NAV.map((item) =>
-        <li key={item.id}>
-            <button
-            onClick={() => onJump(item.id)}
-            className={'rail-item ' + (active === item.id ? 'is-active' : '')}
-            aria-current={active === item.id ? 'true' : undefined}>
-            
-              <span className="rail-n">{item.n}</span>
-              <span className="rail-label">{item.label}</span>
-            </button>
-          </li>
-        )}
-      </ul>
-    </nav>);
-
+    <div className="section-head" {...(reveal ? { 'data-reveal': '' } : {})}>
+      <span className="t-mono">{n}</span>
+      <span className="t-mono">{label}</span>
+      <span className="section-head__rule" aria-hidden="true" />
+    </div>
+  );
 }
 
-function TopBar({ onJump, onContact }) {
+function LangToggle({ lang, onChange, copy }) {
   return (
-    <header className="topbar">
-      <button className="topbar__brand" onClick={() => onJump('inicio')}>
-        <span className="brand-mark" aria-hidden="true">SF</span>
-        <span className="brand-text">
-          <span className="brand-name">Sergio Fagúndez Manso</span>
-          <span className="brand-role">Cybersecurity Consultant · PwC</span>
+    <div className="lang" data-lang={lang} role="group" aria-label={copy.ui.menu}>
+      <span className="lang__thumb" aria-hidden="true" />
+      {['es', 'en'].map((code) => (
+        <button key={code}
+                className="lang__opt"
+                aria-pressed={lang === code}
+                onClick={() => onChange(code)}>
+          {code.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================
+   Chrome
+   ============================================================ */
+
+function TopBar({ copy, lang, setLang, theme, toggleTheme, onJump, onCv }) {
+  const stuck = useScrolled();
+  return (
+    <header className="topbar" data-stuck={stuck || undefined}>
+      <button className="brand" onClick={() => onJump('inicio')}>
+        <span className="brand__mark" aria-hidden="true">SF</span>
+        <span className="brand__text">
+          <span className="brand__name">{copy.identity.name}</span>
+          <span className="brand__role">{copy.identity.role} · {copy.identity.company}</span>
         </span>
       </button>
+
       <div className="topbar__actions">
-        <a className="topbar__cv" href="assets/CV-Sergio-Fagundez-Manso.pdf" download="CV-Sergio-Fagundez-Manso.pdf">
-          <span>Descargar CV</span>
-          <span aria-hidden="true">↓</span>
-        </a>
-        <button className="topbar__cta" onClick={onContact}>
-          <span>Contacto</span>
-          <span className="topbar__dot" aria-hidden="true" />
+        <LangToggle lang={lang} onChange={setLang} copy={copy} />
+        <button className="ctrl ctrl--icon"
+                onClick={toggleTheme}
+                aria-label={theme === 'dark' ? copy.ui.themeLight : copy.ui.themeDark}
+                title={theme === 'dark' ? copy.ui.themeLight : copy.ui.themeDark}>
+          {theme === 'dark' ? <Icon.sun /> : <Icon.moon />}
+        </button>
+        <button className="ctrl" onClick={onCv}>
+          <Icon.download />
+          <span className="cv-label">{copy.ui.cv}</span>
         </button>
       </div>
-    </header>);
-
+    </header>
+  );
 }
 
-function Hero({ variant, onJump, onContact }) {
-  // Variants:
-  // A: Quiet name top-left + huge thesis (default, requested)
-  // B: Split — name/title left, intro paragraph right
-  // C: Marquee scrolling thesis
-  if (variant === 'split') return <HeroSplit onJump={onJump} onContact={onContact} />;
-  if (variant === 'marquee') return <HeroMarquee onJump={onJump} onContact={onContact} />;
-  return <HeroQuiet onJump={onJump} onContact={onContact} />;
-}
-
-function HeroQuiet({ onJump, onContact }) {
+function Rail({ copy, active, onJump }) {
   return (
-    <section id="inicio" className="hero hero--quiet">
-      <div className="hero__meta">
-        <div className="hero__name">Sergio Fagúndez Manso</div>
-        <div className="hero__role">Cybersecurity Consultant · PwC España</div>
+    <nav className="rail" aria-label={copy.ui.sections}>
+      {copy.nav.map((item) => (
+        <button key={item.id}
+                className="rail__item"
+                aria-current={active === item.id ? 'true' : undefined}
+                onClick={() => onJump(item.id)}>
+          <span className="rail__label">{item.label}</span>
+          <span className="rail__n">{item.n}</span>
+          <span className="rail__dot" aria-hidden="true" />
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+/* ============================================================
+   Sections
+   ============================================================ */
+
+function Hero({ copy, onJump }) {
+  const { hero, identity } = copy;
+  return (
+    <section id="inicio" className="hero wrap">
+      <div className="hero__meta" data-reveal>
+        <span className="t-mono">{identity.location}</span>
+        <span className="t-mono">{identity.company}</span>
       </div>
-      <div className="hero__location">
-        <span>Madrid, ES</span>
-        <span className="hero__sep" aria-hidden="true">·</span>
-        <span>Gobernanza, riesgos y cumplimiento · Cloud Security · IA</span>
-      </div>
-      <h1 className="hero__thesis" data-reveal>
-        <span className="hero__line">Anticipar, medir</span>
-        <span className="hero__line">y mitigar el <em>riesgo</em></span>
-        <span className="hero__line">de los sistemas</span>
-        <span className="hero__line hero__line--muted">de información.</span>
+
+      <h1 className="t-display hero__title" data-reveal style={{ '--reveal-delay': '60ms' }}>
+        {hero.line1}<br />
+        {hero.line2} <em>{hero.emphasis}</em><br />
+        {hero.line3}<br />
+        {hero.line4}
       </h1>
-      <div className="hero__foot">
-        <div className="hero__cta">
-          <MagneticButton onClick={() => onJump('trabajo')} variant="solid">
-            Ver proyectos →
-          </MagneticButton>
-          <MagneticButton onClick={onContact} variant="ghost">
-            Contacto
-          </MagneticButton>
+
+      <p className="t-lead" data-reveal style={{ '--reveal-delay': '140ms', marginBottom: '40px' }}>
+        {hero.standfirst}
+      </p>
+
+      <div className="hero__foot" data-reveal style={{ '--reveal-delay': '200ms' }}>
+        <div className="hero__actions">
+          <button className="ctrl ctrl--solid btn-lg" onClick={() => onJump('trabajo')}>
+            {copy.ui.viewProjects}
+            <Icon.arrowRight />
+          </button>
+          <button className="ctrl btn-lg" onClick={() => onJump('contacto')}>
+            {copy.ui.contact}
+          </button>
         </div>
-      </div>
-    </section>);
-
-}
-
-function HeroSplit({ onJump, onContact }) {
-  return (
-    <section id="inicio" className="hero hero--split">
-      <div className="hero-split__left">
-        <div className="hero__name">Sergio Fagúndez Manso</div>
-        <div className="hero__role">Cybersecurity Consultant · PwC</div>
-        <div className="hero-split__loc">Madrid · 2026</div>
-      </div>
-      <div className="hero-split__right">
-        <h1 className="hero__thesis hero__thesis--compact" data-reveal>
-          Decisiones de seguridad <em>claras</em>, en el lenguaje del negocio.
-        </h1>
-        <p className="hero-split__sub">
-          Asesoría a comités y direcciones generales sobre estrategia de
-          ciberseguridad, gestión de riesgo y transformación digital segura.
-        </p>
-        <div className="hero__cta">
-          <MagneticButton onClick={() => onJump('trabajo')}>Ver trabajo →</MagneticButton>
-          <MagneticButton onClick={onContact} variant="ghost">Contacto</MagneticButton>
-        </div>
-      </div>
-    </section>);
-
-}
-
-function HeroMarquee({ onJump, onContact }) {
-  const phrase = 'Estrategia · Riesgo · Decisiones · Confianza · ';
-  return (
-    <section id="inicio" className="hero hero--marquee">
-      <div className="hero__meta">
-        <div className="hero__name">Sergio Fagúndez Manso</div>
-        <div className="hero__role">Cybersecurity Consultant · PwC</div>
-      </div>
-      <div className="marquee" aria-hidden="true">
-        <div className="marquee__track">
-          {Array.from({ length: 6 }).map((_, i) =>
-          <span key={i} className="marquee__item">
-              {phrase}
-            </span>
-          )}
-        </div>
-      </div>
-      <div className="hero__foot hero__foot--marquee">
-        <p className="hero-marquee__sub">
-          Cybersecurity consulting que traduce riesgo técnico en
-          decisiones estratégicas. Para organizaciones que necesitan
-          avanzar sin renunciar a la confianza.
-        </p>
-        <div className="hero__cta">
-          <MagneticButton onClick={() => onJump('trabajo')}>Ver trabajo →</MagneticButton>
-          <MagneticButton onClick={onContact} variant="ghost">Contacto</MagneticButton>
-        </div>
-      </div>
-    </section>);
-
-}
-
-function About() {
-  return (
-    <section id="perfil" className="section section--about">
-      <SectionLabel n="02" label="Perfil" />
-      <div className="about">
-        <p className="about__lead" data-reveal>
-          Trabajo en la frontera entre <em>tecnología</em>, cumplimiento
-          normativo y <em>estrategia</em>. Ayudo a organizaciones —públicas
-          y privadas— a anticipar, medir y mitigar el riesgo de sus
-          sistemas de información.
-        </p>
-        <div className="about__cols">
-          <div className="about__col" data-reveal>
-            <div className="about__col-h">Formación</div>
-            <p>
-              Ingeniero Informático por la Universidad de Valladolid.
-              Cursando el Máster en Ciberseguridad por UNIR
-              (cloud, hacking ético, ISO 27001 y entornos críticos).
-            </p>
-          </div>
-          <div className="about__col" data-reveal>
-            <div className="about__col-h">Especialización</div>
-            <p>
-              Gobernanza, riesgos y cumplimiento, junto a Cloud Security.
-              ISO 27001, ISO 42001, ENS y NIS2 como ejes principales.
-            </p>
-          </div>
-          <div className="about__col" data-reveal>
-            <div className="about__col-h">Sectores</div>
-            <p>
-              Ferrocarriles, sector público, energético, automoción y
-              consultoría / IA. Entornos estratégicos y críticos donde
-              la confianza no es opcional.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>);
-
-}
-
-function CaseCard({ c, onOpen, idx }) {
-  return (
-    <article
-      className="case"
-      data-reveal
-      style={{ '--reveal-delay': `${idx * 80}ms` }}
-      onClick={() => onOpen(c.id)}>
-      
-      <div className="case__media" aria-hidden="true">
-        <div className="case__media-inner">
-          {c.image && (
-            <img className="case__img" src={c.image} alt="" loading="lazy" />
-          )}
-          <div className="case__hover-text">
-            Leer caso <span>→</span>
-          </div>
-          <div className="case__placeholder">
-            <span>{c.n}</span>
-          </div>
-        </div>
-      </div>
-      <div className="case__meta">
-        <span>{c.sector}</span>
-      </div>
-      <h3 className="case__title">{c.title}</h3>
-      <p className="case__summary">{c.summary}</p>
-      <div className="case__open">
-        <span>Leer caso completo</span>
-        <span className="case__arrow" aria-hidden="true">→</span>
-      </div>
-    </article>);
-
-}
-
-function Work({ onOpen }) {
-  return (
-    <section id="trabajo" className="section section--work">
-      <SectionLabel n="03" label="Proyectos" />
-      <div className="work__intro" data-reveal>
-        <h2 className="work__h">
-          Cinco proyectos. Cinco sectores críticos.
-        </h2>
-      </div>
-      <div className="cases">
-        {CASES.map((c, i) =>
-        <CaseCard key={c.id} c={c} onOpen={onOpen} idx={i} />
-        )}
-      </div>
-    </section>);
-
-}
-
-function Expertise() {
-  return (
-    <section id="expertise" className="section section--expertise">
-      <SectionLabel n="04" label="Áreas" />
-      <div className="exp__intro" data-reveal>
-        <h2 className="exp__h">Cuatro áreas. Una misma intención.</h2>
-      </div>
-      <ul className="exp-list">
-        {SERVICES.map((s, i) =>
-        <li key={s.n} className="exp-row" data-reveal style={{ '--reveal-delay': `${i * 60}ms` }}>
-            <div className="exp-row__n">{s.n}</div>
-            <div className="exp-row__title">{s.title}</div>
-            <div className="exp-row__desc">{s.desc}</div>
-          </li>
-        )}
-      </ul>
-    </section>);
-
-}
-
-function Testimonial() {
-  return (
-    <section className="section section--quote">
-      <figure className="pull-quote" data-reveal>
-        <blockquote>
-          <span className="pull-quote__mark" aria-hidden="true">“</span>
-          La ciberseguridad no es un destino, es una capacidad continua.
-          Mi trabajo es construirla con quien decide.
-        </blockquote>
-        <figcaption>
-          <span>Sergio Fagúndez Manso</span>
-          <span className="pull-quote__sep" aria-hidden="true">·</span>
-          <span>Cybersecurity Consultant</span>
-        </figcaption>
-      </figure>
-    </section>);
-
-}
-
-function Experience() {
-  return (
-    <section id="experiencia" className="section section--exp">
-      <SectionLabel n="05" label="Experiencia" />
-      <ol className="timeline">
-        {EXPERIENCE.map((e, i) =>
-        <li className="tl-row" key={i} data-reveal>
-            <div className="tl-period"><span>{e.period}</span></div>
-            <div className="tl-body">
-              <div className="tl-company">
-                {e.logo && (
-                  <span className={`tl-logo-inline${e.logoPad ? ' tl-logo-inline--pad' : ''}`} style={{ background: e.logoBg || 'transparent' }}>
-                    <img src={e.logo} alt={`${e.company} logo`} />
-                  </span>
-                )}
-                <span>{e.company}</span>
-              </div>
-              <div className="tl-role">{e.role}</div>
-              {e.location && <div className="tl-loc">{e.location}</div>}
-              <ul className="tl-impact">
-                {e.impact.map((p, j) => <li key={j}>{p}</li>)}
-              </ul>
-            </div>
-          </li>
-        )}
-      </ol>
-
-      <div className="edu-block">
-        <div className="edu-head" data-reveal>
-          <span className="edu-eyebrow">Formación</span>
-          <h3 className="edu-h">Ingeniería, ciberseguridad y dirección.</h3>
-        </div>
-        <ol className="timeline timeline--edu">
-          {EDUCATION.map((e, i) =>
-          <li className="tl-row" key={i} data-reveal>
-              <div className="tl-period"><span>{e.period}</span></div>
-              <div className="tl-body">
-                <div className="tl-company">
-                  {e.logo && (
-                    <span className={`tl-logo-inline${e.logoPad ? ' tl-logo-inline--pad' : ''}`} style={{ background: e.logoBg || 'transparent' }}>
-                      <img src={e.logo} alt={`${e.institution} logo`} />
-                    </span>
-                  )}
-                  <span style={{ whiteSpace: 'pre-line' }}>{e.institution}</span>
-                </div>
-                <div className="tl-role">{e.title}</div>
-                <p className="tl-detail">{e.detail}</p>
-              </div>
-            </li>
-          )}
-        </ol>
-      </div>
-
-      <div className="certs-block" data-reveal>
-        <div className="certs-head">
-          <span className="edu-eyebrow">Certificaciones & cursos</span>
-          <h3 className="edu-h">Formación continua.</h3>
-        </div>
-        <ul className="certs-list">
-          {CERTIFICATIONS.map((c, i) =>
-          <li key={i} className="cert-item">
-              <span className="cert-n">{String(i + 1).padStart(2, '0')}</span>
-              <span className="cert-label">{c}</span>
-            </li>
-          )}
+        <ul className="hero__tags">
+          {identity.tags.map((t) => <li key={t} className="tag">{t}</li>)}
         </ul>
       </div>
 
-      <div className="stack-block" data-reveal>
-        <div className="certs-head">
-          <span className="edu-eyebrow">Stack & herramientas</span>
-          <h3 className="edu-h">Lo que uso para entregar.</h3>
-        </div>
-        <dl className="stack-grid">
-          {Object.entries(STACK).map(([group, items]) =>
-          <div className="stack-row" key={group}>
-              <dt>{group}</dt>
-              <dd>
-                {items.map((it, i) =>
-              <span key={i} className="stack-tag">{it}</span>
-              )}
-              </dd>
-            </div>
-          )}
-        </dl>
+      <div className="scroll-hint" aria-hidden="true">
+        <span className="scroll-hint__line" />
+        <span className="t-mono">{copy.ui.scrollHint}</span>
       </div>
-    </section>);
-
+    </section>
+  );
 }
 
-function Contact({ onContact }) {
-  const [toast, setToast] = useState(null);
-  const copy = useCallback((value, label) => {
-    const fire = () => {
-      setToast(label);
-      window.clearTimeout(copy._t);
-      copy._t = window.setTimeout(() => setToast(null), 1800);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(value).then(fire).catch(() => {
-        // Fallback
-        const ta = document.createElement('textarea');
-        ta.value = value; ta.style.position = 'fixed'; ta.style.opacity = '0';
-        document.body.appendChild(ta); ta.select();
-        try { document.execCommand('copy'); } catch (e) {}
-        document.body.removeChild(ta);
-        fire();
-      });
-    } else {
-      fire();
-    }
-  }, []);
+function About({ copy }) {
+  const { about, nav } = copy;
   return (
-    <section id="contacto" className="section section--contact">
-      <SectionLabel n="06" label="Contacto" />
-      <div className="contact" data-reveal>
-        <h2 className="contact__h">
-          ¿Tienes una decisión <em>importante</em> por delante?
-        </h2>
-        <div className="contact__cta">
-          <span className="magnetic magnetic--static" aria-hidden="true">
-            <span>Contáctame →</span>
-          </span>
-          <a className="contact__link" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer">
-            LinkedIn
-          </a>
-          <button
-            type="button"
-            className="contact__email-plain contact__copy"
-            onClick={() => copy(CONTACT.email, 'Correo copiado')}
-            aria-label={`Copiar correo ${CONTACT.email}`}>
-            {CONTACT.email}
-          </button>
-          <button
-            type="button"
-            className="contact__link contact__copy"
-            onClick={() => copy(CONTACT.phone, 'Teléfono copiado')}
-            aria-label={`Copiar teléfono ${CONTACT.phone}`}>
-            {CONTACT.phone}
-          </button>
+    <section id="perfil" className="section wrap">
+      <SectionHead n={nav[1].n} label={about.label} />
+      <div className="about__grid">
+        <div>
+          <h2 className="t-h2" data-reveal style={{ marginBottom: '26px' }}>{about.heading}</h2>
+          <div className="about__body">
+            {about.body.map((p, i) => (
+              <p key={i} className="t-body" data-reveal style={{ '--reveal-delay': `${i * 60}ms` }}>{p}</p>
+            ))}
+          </div>
         </div>
+        <ul className="stats" data-reveal style={{ '--reveal-delay': '120ms' }}>
+          {about.stats.map((s) => (
+            <li key={s.label} className="stat">
+              <span className="stat__value">{s.value}</span>
+              <span className="stat__label">{s.label}</span>
+            </li>
+          ))}
+        </ul>
       </div>
-      <div className={`copy-toast${toast ? ' is-on' : ''}`} aria-live="polite">
-        <span>{toast || ''}</span>
-      </div>
-      <footer className="footer">
-        <div>© 2026 Sergio Fagúndez Manso</div>
-        <div>Madrid · Cybersecurity Consultant</div>
-      </footer>
-    </section>);
-
+    </section>
+  );
 }
 
-// ---------- Case detail overlay ----------
+function Position({ copy }) {
+  return (
+    <section className="position wrap">
+      <p className="position__text" data-reveal>{copy.position.statement}</p>
+      <p className="t-mono position__attr" data-reveal style={{ '--reveal-delay': '80ms' }}>
+        {copy.position.attribution}
+      </p>
+    </section>
+  );
+}
 
-function CaseDetail({ caseId, onClose }) {
-  const c = CASES.find((x) => x.id === caseId);
+function Work({ copy, onOpen }) {
+  const { work, nav, cases } = copy;
+  return (
+    <section id="trabajo" className="section wrap">
+      <SectionHead n={nav[2].n} label={work.label} />
+      <div style={{ marginBottom: 'clamp(32px, 4vw, 56px)' }}>
+        <h2 className="t-h2" data-reveal style={{ marginBottom: '14px' }}>{work.heading}</h2>
+        <p className="t-body" data-reveal style={{ '--reveal-delay': '60ms' }}>{work.note}</p>
+      </div>
+
+      <div className="cases">
+        {DATA.cases.map((c, i) => {
+          const t = cases[c.id];
+          return (
+            <article key={c.id}
+                     className="case"
+                     data-reveal
+                     style={{ '--reveal-delay': `${Math.min(i, 4) * 55}ms` }}>
+              <div className="case__visual"><CaseVisual kind={c.visual} /></div>
+              <div className="case__body">
+                <div className="case__meta">
+                  <span className="t-mono">{c.n}</span>
+                  <span className="case__meta-sep" aria-hidden="true" />
+                  <span className="t-mono">{t.sector}</span>
+                  <span className="case__meta-sep" aria-hidden="true" />
+                  <span className="t-mono">{c.year}</span>
+                </div>
+                <h3 className="t-h3">
+                  {/* The trigger stretches over the whole card, so the card is
+                      clickable while the heading stays a real heading. */}
+                  <button className="case__trigger"
+                          onClick={() => onOpen(c.id)}
+                          aria-label={`${t.title} — ${copy.ui.readCase}`}>
+                    <span className="case__stretch" aria-hidden="true" />
+                    {t.title}
+                  </button>
+                </h3>
+                <p className="case__summary">{t.summary}</p>
+                <div className="case__foot">
+                  <ul className="chips">
+                    {c.stack.slice(0, 4).map((s) => <li key={s} className="chip">{s}</li>)}
+                  </ul>
+                  <span className="case__go" aria-hidden="true"><Icon.arrowRight /></span>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function CaseDrawer({ copy, caseId, onClose }) {
+  const ref = useRef(null);
+  const open = Boolean(caseId);
+
+  // Hold the last case while closing, so the drawer slides out along the
+  // same path it came in on instead of vanishing.
+  const [shown, setShown] = useState(caseId);
   useEffect(() => {
-    if (!c) return;
-    const onKey = (e) => {if (e.key === 'Escape') onClose();};
+    if (caseId) { setShown(caseId); return; }
+    const id = window.setTimeout(() => setShown(null), 460);
+    return () => window.clearTimeout(id);
+  }, [caseId]);
+
+  const meta = DATA.cases.find((c) => c.id === shown);
+  const t = shown ? copy.cases[shown] : null;
+
+  // Escape closes; focus moves in; background scroll is locked.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    const id = window.setTimeout(() => ref.current && ref.current.focus(), 60);
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
+      document.body.style.overflow = prev;
+      window.clearTimeout(id);
     };
-  }, [c, onClose]);
-  if (!c) return null;
+  }, [open, onClose]);
+
+  if (!meta || !t) return null;
 
   return (
-    <div className="detail" role="dialog" aria-modal="true" aria-labelledby="detail-title">
-      <div className="detail__backdrop" onClick={onClose} />
-      <div className="detail__panel">
-        <div className="detail__bar">
-          <div className="detail__bread">
-            <span>Trabajo</span>
-            <span aria-hidden="true">/</span>
-            <span>{c.sector}</span>
-          </div>
-          <button className="detail__close" onClick={onClose} aria-label="Cerrar">
-            <span>Cerrar</span>
-            <span aria-hidden="true">×</span>
+    <React.Fragment>
+      <div className="scrim" data-open={open || undefined} onClick={onClose} aria-hidden="true" />
+      <aside className="drawer"
+             data-open={open || undefined}
+             aria-hidden={!open || undefined}
+             role="dialog"
+             aria-modal="true"
+             aria-label={t.title}
+             tabIndex={-1}
+             ref={ref}>
+        <div className="drawer__bar">
+          <span className="t-mono">{meta.n} · {t.sector}</span>
+          <button className="ctrl ctrl--ghost" onClick={onClose}>
+            {copy.ui.close}
+            <Icon.close />
           </button>
         </div>
 
-        <article className="detail__content">
-          <div className="detail__eyebrow">
-            <span>{c.n}</span>
-            <span aria-hidden="true">·</span>
-            <span>{c.sector}</span>
-          </div>
-          <h2 id="detail-title" className="detail__title">{c.title}</h2>
+        <div className="drawer__inner">
+          <div className="drawer__visual"><CaseVisual kind={meta.visual} /></div>
 
-          <div className="detail__hero" aria-hidden="true">
-            {c.image ? (
-              <img className="detail__hero-img" src={c.image} alt="" />
-            ) : (
-              <div className="detail__hero-inner">
-                <span>{c.n} · Caso de estudio</span>
-              </div>
-            )}
+          <h2 className="t-h2" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.125rem)' }}>{t.title}</h2>
+          <p className="t-lead" style={{ marginTop: '16px' }}>{t.summary}</p>
+
+          <div className="drawer__block">
+            <h3 className="t-mono">{copy.ui.problem}</h3>
+            <p className="t-body">{t.problem}</p>
           </div>
 
-          <div className="detail__grid">
-            <div className="detail__col-label">Problema</div>
-            <div className="detail__col-body"><p>{c.problem}</p></div>
-
-            <div className="detail__col-label">Contexto</div>
-            <div className="detail__col-body"><p>{c.context}</p></div>
-
-            <div className="detail__col-label">Enfoque estratégico</div>
-            <div className="detail__col-body">
-              <ol className="detail__list">
-                {c.approach.map((a, i) =>
-                <li key={i}><span className="detail__list-n">{String(i + 1).padStart(2, '0')}</span>{a}</li>
-                )}
-              </ol>
-            </div>
-
-            <div className="detail__col-label">Impacto</div>
-            <div className="detail__col-body">
-              <div className="detail__metrics">
-                {c.outcome.map((o, i) =>
-                <div className="metric" key={i}>
-                    <div className="metric__value">{o.metric}</div>
-                    <div className="metric__label">{o.label}</div>
-                  </div>
-                )}
-              </div>
-            </div>
+          <div className="drawer__block">
+            <h3 className="t-mono">{copy.ui.context}</h3>
+            <p className="t-body">{t.context}</p>
           </div>
 
-          <figure className="detail__quote">
-            <div className="detail__stack">
-              <div className="detail__stack-h">Stack & frameworks</div>
-              <div className="detail__stack-tags">
-                {(c.stack || []).map((s, i) =>
-                <span key={i} className="stack-tag">{s}</span>
-                )}
-              </div>
-            </div>
-          </figure>
-
-          <div className="detail__nav">
-            <button className="detail__navlink" onClick={onClose}>
-              ← Volver al trabajo
-            </button>
-            <button
-              className="detail__navlink"
-              onClick={() => {
-                const idx = CASES.findIndex((x) => x.id === c.id);
-                const next = CASES[(idx + 1) % CASES.length];
-                document.querySelector('.detail__content').scrollTop = 0;
-                onClose();
-                setTimeout(() => {
-                  // open next via custom event
-                  window.dispatchEvent(new CustomEvent('open-case', { detail: next.id }));
-                }, 50);
-              }}>
-              
-              Siguiente caso →
-            </button>
+          <div className="drawer__block">
+            <h3 className="t-mono">{copy.ui.approach}</h3>
+            <ul className="list-approach">
+              {t.approach.map((a, i) => (
+                <li key={i}>
+                  <span className="n">{String(i + 1).padStart(2, '0')}</span>
+                  <span>{a}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </article>
-      </div>
-    </div>);
 
+          <div className="drawer__block">
+            <h3 className="t-mono">{copy.ui.outcome}</h3>
+            <ul className="outcomes">
+              {t.outcome.map((o) => (
+                <li key={o.metric} className="outcome">
+                  <div className="outcome__metric">{o.metric}</div>
+                  <div className="outcome__label">{o.label}</div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="drawer__block">
+            <h3 className="t-mono">{copy.ui.stackLabel}</h3>
+            <ul className="chips">
+              {meta.stack.map((s) => <li key={s} className="chip">{s}</li>)}
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </React.Fragment>
+  );
 }
 
-// ---------- Tweaks defaults ----------
+function Services({ copy }) {
+  const { services, nav } = copy;
+  return (
+    <section id="expertise" className="section">
+      <div className="wrap">
+        <SectionHead n={nav[3].n} label={services.label} />
+        <h2 className="t-h2" data-reveal style={{ marginBottom: 'clamp(32px, 4vw, 56px)' }}>
+          {services.heading}
+        </h2>
+      </div>
+      <ul className="services">
+        {services.items.map((s, i) => (
+          <li key={s.n} className="service" data-reveal style={{ '--reveal-delay': `${i * 50}ms` }}>
+            <span className="t-mono">{s.n}</span>
+            <h3 className="t-h3">{s.title}</h3>
+            <p className="service__desc">{s.desc}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
-const TWEAK_DEFAULS = /*EDITMODE-BEGIN*/{
-  "typePair": "modern",
-  "density": "airy",
-  "theme": "light",
-  "heroVariant": "quiet"
-} /*EDITMODE-END*/;
+function CompanyLogo({ src, bg, pad, name }) {
+  const [failed, setFailed] = useState(false);
 
-// ---------- App ----------
+  // A missing logo falls back to a wordmark. Acronyms (KPMG, PwC, UNIR)
+  // read better whole than reduced to initials.
+  const first = name.split(/\s+/)[0].replace(/[.,]$/, '');
+  const label = /^[A-Z][A-Za-z]{1,4}$/.test(first) || first === first.toUpperCase()
+    ? first.slice(0, 4)
+    : name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+  return (
+    <span className="xp__logo" data-pad={pad || undefined}
+          style={{ background: failed ? 'var(--bg-2)' : bg }}>
+      {failed
+        ? <span className="xp__logo-fallback">{label}</span>
+        : <img src={src} alt="" onError={() => setFailed(true)} loading="lazy" />}
+    </span>
+  );
+}
+
+function Experience({ copy }) {
+  const { experience, nav, stackLabels } = copy;
+  return (
+    <section id="experiencia" className="section wrap">
+      <SectionHead n={nav[4].n} label={experience.label} />
+      <h2 className="t-h2" data-reveal style={{ marginBottom: 'clamp(24px, 3vw, 40px)' }}>
+        {experience.heading}
+      </h2>
+
+      <div className="xp">
+        {DATA.experience.map((e, i) => {
+          const t = experience.items[e.id];
+          return (
+            <article key={e.id} className="xp__item" data-reveal style={{ '--reveal-delay': `${i * 55}ms` }}>
+              <div className="xp__aside">
+                <CompanyLogo src={e.logo} bg={e.logoBg} pad={e.logoPad} name={t.company} />
+                <span className="t-mono">{t.period}</span>
+                {e.current && (
+                  <span className="xp__now">
+                    <span className="xp__now-dot" aria-hidden="true" />
+                    {copy.ui.present || 'Now'}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h3 className="t-h3 xp__role">{t.role}</h3>
+                <p className="xp__company">{t.company} · {t.location}</p>
+                <ul className="xp__impact">
+                  {t.impact.map((p, j) => <li key={j}>{p}</li>)}
+                </ul>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="two-col">
+        <div>
+          <h3 className="t-mono" data-reveal style={{ marginBottom: '8px' }}>{experience.eduHeading}</h3>
+          {DATA.education.map((e) => {
+            const t = experience.education[e.id];
+            return (
+              <div key={e.id} className="edu__item" data-reveal>
+                <CompanyLogo src={e.logo} bg={e.logoBg} name={t.institution} />
+                <div>
+                  <span className="t-mono">{t.period}</span>
+                  <div className="edu__title" style={{ marginTop: '6px' }}>{t.title}</div>
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--fg-2)' }}>{t.institution}</div>
+                  <p className="edu__detail">{t.detail}</p>
+                </div>
+              </div>
+            );
+          })}
+
+          <h3 className="t-mono" data-reveal style={{ marginTop: '40px', marginBottom: '4px' }}>
+            {experience.stackHeading}
+          </h3>
+          <div className="stack-groups">
+            {DATA.stackGroups.map((g) => (
+              <div key={g.id} data-reveal>
+                <div className="t-mono stack-group__label">{stackLabels[g.id]}</div>
+                <ul className="chips">
+                  {g.items.map((s) => <li key={s} className="chip">{s}</li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 className="t-mono" data-reveal style={{ marginBottom: '8px' }}>{experience.certHeading}</h3>
+          <ul className="certs">
+            {experience.certifications.map((c, i) => (
+              <li key={i} className="cert" data-reveal style={{ '--reveal-delay': `${Math.min(i, 6) * 30}ms` }}>
+                <Icon.dot style={{ width: 14, height: 14 }} />
+                <span>{c}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Contact({ copy, onCopy, onCv }) {
+  const { contact, nav, footer } = copy;
+  const { email, phone, linkedin } = DATA.contact;
+
+  const rows = [
+    { label: contact.emailLabel, value: email, action: () => onCopy(email) },
+    { label: contact.phoneLabel, value: phone, action: () => onCopy(phone) },
+    { label: contact.linkedinLabel, value: 'linkedin.com/in/sergiofagundezmanso', href: linkedin },
+    { label: contact.cvLabel, value: copy.ui.cv, action: onCv }
+  ];
+
+  return (
+    <section id="contacto" className="section wrap">
+      <SectionHead n={nav[5].n} label={contact.label} />
+      <div className="contact__grid">
+        <div>
+          <h2 className="t-h2" data-reveal style={{ marginBottom: '20px' }}>{contact.heading}</h2>
+          <p className="t-body" data-reveal style={{ '--reveal-delay': '60ms' }}>{contact.body}</p>
+        </div>
+
+        <ul className="links" data-reveal style={{ '--reveal-delay': '100ms' }}>
+          {rows.map((r) => {
+            const inner = (
+              <React.Fragment>
+                <span className="t-mono">{r.label}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                  <span className="link-row__value">{r.value}</span>
+                  <span className="link-row__icon"><Icon.arrowRight /></span>
+                </span>
+              </React.Fragment>
+            );
+            return (
+              <li key={r.label}>
+                {r.href
+                  ? <a className="link-row" href={r.href} target="_blank" rel="noopener noreferrer">{inner}</a>
+                  : <button className="link-row" onClick={r.action}>{inner}</button>}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div className="footer">
+        <span className="t-mono">© {new Date().getFullYear()} {copy.identity.name}. {footer.rights}</span>
+        <span className="t-mono">{footer.built}</span>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================
+   App
+   ============================================================ */
 
 function App() {
-  const tw = window.useTweaks ? window.useTweaks(TWEAK_DEFAULS) : null;
-  const t = tw ? tw[0] : TWEAK_DEFAULS;
-  const setTweak = tw ? tw[1] : () => {};
-
+  const [lang, setLang] = usePersisted('sf.lang', (navigator.language || 'es').startsWith('en') ? 'en' : 'es');
+  const [theme, setTheme] = usePersisted('sf.theme', '');
   const [openCase, setOpenCase] = useState(null);
-  const active = useActiveSection(NAV.map((n) => n.id));
-  useScrollReveal();
+  const { toasts, push, dismiss } = useToastStore();
 
-  // Apply tweaks to root
-  useEffect(() => {
-    const root = document.documentElement;
-    root.dataset.type = t.typePair;
-    root.dataset.density = t.density;
-    root.dataset.theme = t.theme;
-  }, [t.typePair, t.density, t.theme]);
+  const copy = COPY[lang] || COPY.es;
+  const active = useActiveSection(SECTION_IDS);
+  const scrolled = useScrolled(600);
+  useReveal([lang]);
+
+  // Theme: follow the system unless the visitor has chosen otherwise.
+  const systemDark = useMemo(
+    () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches, []
+  );
+  const resolvedTheme = theme || (systemDark ? 'dark' : 'light');
 
   useEffect(() => {
-    const handler = (e) => setOpenCase(e.detail);
-    window.addEventListener('open-case', handler);
-    return () => window.removeEventListener('open-case', handler);
-  }, []);
+    document.documentElement.setAttribute('data-theme', resolvedTheme);
+  }, [resolvedTheme]);
+
+  useEffect(() => {
+    document.documentElement.lang = copy.htmlLang;
+    document.title = copy.meta.title;
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute('content', copy.meta.description);
+  }, [copy]);
 
   const jump = useCallback((id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 
-  const handleContact = useCallback(() => {
-    jump('contacto');
-  }, [jump]);
+  const changeLang = useCallback((code) => {
+    if (code === lang) return;
+    setLang(code);
+    push(COPY[code].ui.langChanged, { type: 'success' });
+  }, [lang, setLang, push]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  }, [resolvedTheme, setTheme]);
+
+  const copyText = useCallback(async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      push(copy.ui.copied, { type: 'success' });
+    } catch {
+      push(copy.ui.copyFailed, { type: 'error' });
+    }
+  }, [copy, push]);
+
+  const downloadCv = useCallback(() => {
+    const a = document.createElement('a');
+    a.href = DATA.cvPath;
+    a.download = 'CV-Sergio-Fagundez-Manso.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    push(copy.ui.cvStarted, { type: 'success' });
+  }, [copy, push]);
 
   return (
-    <div className="page" data-scroller>
-      <TopBar onJump={jump} onContact={handleContact} />
-      <SideRail active={active} onJump={jump} />
+    <ToastCtx.Provider value={push}>
+      <a className="skip-link" href="#perfil">{copy.ui.skipToContent}</a>
 
-      <main className="main">
-        <Hero variant={t.heroVariant} onJump={jump} onContact={handleContact} />
-        <About />
-        <Work onOpen={setOpenCase} />
-        <Expertise />
-        <Testimonial />
-        <Experience />
-        <Contact onContact={handleContact} />
+      <TopBar copy={copy} lang={lang} setLang={changeLang}
+              theme={resolvedTheme} toggleTheme={toggleTheme}
+              onJump={jump} onCv={downloadCv} />
+
+      <Rail copy={copy} active={active} onJump={jump} />
+
+      <main className="shell">
+        <Hero copy={copy} onJump={jump} />
+        <About copy={copy} />
+        <Position copy={copy} />
+        <Work copy={copy} onOpen={setOpenCase} />
+        <Services copy={copy} />
+        <Experience copy={copy} />
+        <Contact copy={copy} onCopy={copyText} onCv={downloadCv} />
       </main>
 
-      {openCase && <CaseDetail caseId={openCase} onClose={() => setOpenCase(null)} />}
+      <CaseDrawer copy={copy} caseId={openCase} onClose={() => setOpenCase(null)} />
 
-      {window.TweaksPanel &&
-      <window.TweaksPanel title="Tweaks">
-          <window.TweakSection title="Tipografía">
-            <window.TweakRadio
-            label="Pareja tipográfica"
-            value={t.typePair}
-            onChange={(v) => setTweak('typePair', v)}
-            options={[
-            { value: 'modern', label: 'Sans' },
-            { value: 'editorial', label: 'Serif' }]
-            } />
-          
-          </window.TweakSection>
-          <window.TweakSection title="Composición">
-            <window.TweakRadio
-            label="Densidad"
-            value={t.density}
-            onChange={(v) => setTweak('density', v)}
-            options={[
-            { value: 'airy', label: 'Airy' },
-            { value: 'compact', label: 'Compact' }]
-            } />
-          
-            <window.TweakRadio
-            label="Tema"
-            value={t.theme}
-            onChange={(v) => setTweak('theme', v)}
-            options={[
-            { value: 'light', label: 'Light' },
-            { value: 'dark', label: 'Dark' }]
-            } />
-          
-          </window.TweakSection>
-          <window.TweakSection title="Hero">
-            <window.TweakSelect
-            label="Variante"
-            value={t.heroVariant}
-            onChange={(v) => setTweak('heroVariant', v)}
-            options={[
-            { value: 'quiet', label: 'Quiet (nombre arriba, tesis grande)' },
-            { value: 'split', label: 'Split (nombre / intro)' },
-            { value: 'marquee', label: 'Marquee (titular en movimiento)' }]
-            } />
-          
-          </window.TweakSection>
-        </window.TweaksPanel>
-      }
-    </div>);
+      <button className="to-top"
+              data-show={scrolled || undefined}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              aria-label={copy.ui.backToTop}>
+        <Icon.arrowUp />
+      </button>
 
+      <Toaster toasts={toasts} dismiss={dismiss} />
+    </ToastCtx.Provider>
+  );
 }
 
 window.PortfolioApp = App;

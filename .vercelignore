@@ -1,0 +1,5 @@
+# Design-process artefacts: kept in the repo, not served on the site.
+uploads/
+
+# The OG cover is a source page for producing assets/og-cover.png, not a route.
+og.html
