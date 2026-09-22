@@ -22,7 +22,7 @@ window.DATA = {
   ],
 
   experience: [
-    { id: 'kpmg',  logo: 'assets/logo-kpmg.png',  logoBg: '#ffffff', logoPad: true, current: true },
+    { id: 'kpmg',  logo: 'assets/logo-kpmg.png',  logoBg: '#00338D', current: true },
     { id: 'pwc',   logo: 'assets/logo-pwc.png',   logoBg: '#ffffff', logoPad: true },
     { id: 'atlas', logo: 'assets/logo-atlas.png', logoBg: '#0f2545' }
   ],
@@ -32,7 +32,16 @@ window.DATA = {
     { id: 'uva',  logo: 'assets/logo-uva.png',  logoBg: '#b91458' }
   ],
 
-  // Standards and platforms, shown as a moving band. Language-neutral by nature.
+  // Tags per practice area, in the order the services appear. Standards and
+  // product names, so they read the same in both languages.
+  serviceTags: [
+    ['ISO/IEC 27001', 'ISO 31000', 'ISO/IEC 42001', 'ENS'],
+    ['Microsoft Azure', 'MCSB', 'Terraform', 'RBAC', 'IAM'],
+    ['Risk Management', 'ENS', 'NIS2', 'Auditoría'],
+    ['Power BI', 'SAS', 'SQL', 'KPIs']
+  ],
+
+  // Standards and platforms. Language-neutral by nature.
   marquee: [
     'ISO/IEC 27001', 'ENS', 'NIS2', 'GDPR', 'ISO/IEC 42001', 'ISO 31000',
     'Microsoft Azure', 'Cloud Security Benchmark', 'Terraform', 'RBAC',
@@ -135,7 +144,8 @@ window.COPY = {
 
     position: {
       statement: 'La ciberseguridad no es un destino. Es una capacidad que se construye con quien decide.',
-      attribution: 'Posicionamiento'
+      attribution: 'Posicionamiento',
+      framesLabel: 'Marcos sobre los que trabajo'
     },
 
     work: {
@@ -334,6 +344,8 @@ window.COPY = {
       label: 'Contacto',
       heading: 'Hablemos',
       body: 'Disponible para proyectos de gobernanza, riesgo y cumplimiento, Cloud Security y auditoría de sistemas de IA.',
+      write: 'Escríbeme',
+      available: 'Disponible para nuevos proyectos',
       emailLabel: 'Correo',
       phoneLabel: 'Teléfono',
       linkedinLabel: 'LinkedIn',
@@ -430,7 +442,8 @@ window.COPY = {
 
     position: {
       statement: 'Cybersecurity is not a destination. It is a capability, built alongside the people who decide.',
-      attribution: 'Position'
+      attribution: 'Position',
+      framesLabel: 'Frameworks I work within'
     },
 
     work: {
@@ -629,6 +642,8 @@ window.COPY = {
       label: 'Contact',
       heading: 'Get in touch',
       body: 'Available for governance, risk and compliance, cloud security and AI audit engagements.',
+      write: 'Write to me',
+      available: 'Available for new engagements',
       emailLabel: 'Email',
       phoneLabel: 'Phone',
       linkedinLabel: 'LinkedIn',

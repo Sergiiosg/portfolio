@@ -664,90 +664,6 @@ function About({ copy }) {
   );
 }
 
-function Position({ copy }) {
-  return (
-    <section className="position wrap">
-      <p className="position__text" data-reveal>{copy.position.statement}</p>
-      <p className="t-mono position__attr" data-reveal style={{ '--reveal-delay': '80ms' }}>
-        {copy.position.attribution}
-      </p>
-    </section>
-  );
-}
-
-// Apple's momentum projection from Designing Fluid Interfaces: where would
-// this throw land if it decelerated naturally?
-function project(velocity, decelerationRate = 0.998) {
-  return (velocity / 1000) * decelerationRate / (1 - decelerationRate);
-}
-
-function useDragScroll() {
-  const ref = useRef(null);
-  const drag = useRef(null);
-  const moved = useRef(false);
-
-  const onPointerDown = (e) => {
-    // Let touch use native scrolling — it already has momentum and rubber-banding.
-    if (e.pointerType === 'touch' || e.button !== 0) return;
-    const el = ref.current;
-    drag.current = { x: e.clientX, left: el.scrollLeft, t: performance.now(), lastX: e.clientX };
-    moved.current = false;
-    el.setPointerCapture(e.pointerId);
-    el.dataset.dragging = '';
-  };
-
-  const onPointerMove = (e) => {
-    const d = drag.current;
-    if (!d) return;
-    const dx = e.clientX - d.x;
-    if (!moved.current && Math.abs(dx) < 6) return;   // hysteresis before committing
-    moved.current = true;
-    ref.current.scrollLeft = d.left - dx;
-    d.vx = (e.clientX - d.lastX) / Math.max(performance.now() - d.t, 1) * 1000;
-    d.lastX = e.clientX;
-    d.t = performance.now();
-  };
-
-  const onPointerUp = (e) => {
-    const d = drag.current;
-    const el = ref.current;
-    if (!d || !el) return;
-    drag.current = null;
-    delete el.dataset.dragging;
-    if (e.pointerId !== undefined && el.hasPointerCapture(e.pointerId)) {
-      el.releasePointerCapture(e.pointerId);
-    }
-    // Hand the release velocity to the scroll: land where the throw was going.
-    if (moved.current && Math.abs(d.vx || 0) > 40) {
-      el.scrollTo({ left: el.scrollLeft - project(d.vx), behavior: 'smooth' });
-    }
-  };
-
-  // A drag that moved should not also fire the card's click.
-  const suppressClick = (e) => {
-    if (moved.current) { e.preventDefault(); e.stopPropagation(); moved.current = false; }
-  };
-
-  return { ref, moved, handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp, onClickCapture: suppressClick } };
-}
-
-function Marquee() {
-  // Duplicated once so the loop seams invisibly at -50%.
-  const row = DATA.marquee.concat(DATA.marquee);
-  return (
-    <div className="marquee" aria-hidden="true">
-      <div className="marquee__track">
-        {row.map((item, i) => (
-          <span key={i} className="marquee__item">
-            {item}
-            <span className="marquee__sep">/</span>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ReadingProgress() {
   const [p, setP] = useState(0);
   useEffect(() => {
@@ -770,45 +686,101 @@ function ReadingProgress() {
   return <span className="topbar__progress" style={{ transform: `scaleX(${p})` }} aria-hidden="true" />;
 }
 
-function Work({ copy, onOpen }) {
-  const { work, nav, cases } = copy;
-  const { ref: railRef, moved, handlers } = useDragScroll();
-  const [progress, setProgress] = useState(0);
-  const [edges, setEdges] = useState({ start: true, end: false });
+// A committed colour break. The palette flips here regardless of theme, so
+// the page stops reading as one continuous column of text.
+function Position({ copy }) {
+  return (
+    <section className="invert">
+      <div className="wrap">
+        <p className="t-mono" data-reveal>{copy.position.attribution}</p>
+        <p className="position__text" data-reveal style={{ '--reveal-delay': '60ms' }}>
+          {copy.position.statement}
+        </p>
 
-  const measure = useCallback(() => {
-    const el = railRef.current;
-    if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
-    setProgress(max > 0 ? el.scrollLeft / max : 0);
-    setEdges({ start: el.scrollLeft < 8, end: el.scrollLeft > max - 8 });
-  }, [railRef]);
+        <div className="frameworks">
+          <p className="t-mono frameworks__label" data-reveal>{copy.position.framesLabel}</p>
+          <ul className="frameworks__wall">
+            {DATA.marquee.map((f, i) => (
+              <li key={f} className="framework" data-reveal
+                  style={{ '--reveal-delay': `${Math.min(i, 9) * 40}ms` }}>
+                {f}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+
+// Vertical scroll drives horizontal travel: the section is made tall enough
+// to absorb the track's overflow, and a sticky viewport inside it pans across.
+function useScrollRail() {
+  const outer = useRef(null);
+  const track = useRef(null);
+  const [state, setState] = useState({ x: 0, p: 0, height: null, on: false });
 
   useEffect(() => {
-    const el = railRef.current;
-    if (!el) return;
+    const mq = window.matchMedia('(min-width: 861px)');
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
     let frame = null;
-    const onScroll = () => { if (frame === null) frame = requestAnimationFrame(() => { frame = null; measure(); }); };
-    el.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', measure);
+    let distance = 0;
+
+    const layout = () => {
+      const o = outer.current, t = track.current;
+      if (!o || !t) return;
+      // Below the breakpoint (or with reduced motion) the rail stays a plain
+      // swipeable row — sticky panning is miserable on a phone.
+      if (!mq.matches || reduced.matches) {
+        distance = 0;
+        setState({ x: 0, p: 0, height: null, on: false });
+        return;
+      }
+      distance = Math.max(t.scrollWidth - window.innerWidth, 0);
+      // Nothing overflows: pinning would burn a screen of scroll for no travel.
+      if (!distance) { setState({ x: 0, p: 0, height: null, on: false }); return; }
+      setState((s) => ({ ...s, height: window.innerHeight + distance, on: true }));
+    };
+
+    const measure = () => {
+      frame = null;
+      const o = outer.current;
+      if (!o || !distance) return;
+      const rect = o.getBoundingClientRect();
+      const travel = o.offsetHeight - window.innerHeight;
+      const p = travel > 0 ? clamp(-rect.top / travel, 0, 1) : 0;
+      setState((s) => ({ ...s, x: -p * distance, p }));
+    };
+
+    const onScroll = () => { if (frame === null) frame = requestAnimationFrame(measure); };
+    const onResize = () => { layout(); onScroll(); };
+
+    layout();
     measure();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
+    mq.addEventListener('change', onResize);
+    reduced.addEventListener('change', onResize);
     return () => {
-      el.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
+      mq.removeEventListener('change', onResize);
+      reduced.removeEventListener('change', onResize);
       if (frame !== null) cancelAnimationFrame(frame);
     };
-  }, [measure, railRef]);
+  }, []);
 
-  const step = (dir) => {
-    const el = railRef.current;
-    if (!el) return;
-    const card = el.querySelector('.case');
-    const by = card ? card.getBoundingClientRect().width + 20 : el.clientWidth * 0.8;
-    el.scrollBy({ left: dir * by, behavior: 'smooth' });
-  };
+  return { outer, track, ...state };
+}
+
+function Work({ copy, onOpen }) {
+  const { work, nav, cases } = copy;
+  const { outer, track, x, p, height, on } = useScrollRail();
 
   return (
-    <section id="trabajo" className="section">
+    <section id="trabajo" className="section work">
       <div className="wrap">
         <SectionHead n={nav[2].n} label={work.label} />
         <div className="work__head">
@@ -816,21 +788,19 @@ function Work({ copy, onOpen }) {
             <h2 className="t-h2" data-reveal style={{ marginBottom: '14px' }}>{work.heading}</h2>
             <p className="t-body" data-reveal style={{ '--reveal-delay': '60ms' }}>{work.note}</p>
           </div>
-          <div className="work__nav" data-reveal>
-            <button className="ctrl ctrl--icon" onClick={() => step(-1)}
-                    disabled={edges.start} aria-label={work.prev}>
-              <Icon.arrowRight style={{ transform: 'rotate(180deg)' }} />
-            </button>
-            <button className="ctrl ctrl--icon" onClick={() => step(1)}
-                    disabled={edges.end} aria-label={work.next}>
-              <Icon.arrowRight />
-            </button>
+          <div className="work__count" data-reveal>
+            <span className="work__count-n t-num">{String(Math.round(p * (DATA.cases.length - 1)) + 1).padStart(2, '0')}</span>
+            <span className="work__count-sep" aria-hidden="true">/</span>
+            <span className="t-mono">{String(DATA.cases.length).padStart(2, '0')}</span>
           </div>
         </div>
       </div>
 
-      <div className="cases" ref={railRef} {...handlers}
-           role="region" aria-label={work.heading} tabIndex={0}>
+      <div className="work__outer" ref={outer} style={height ? { height } : undefined}>
+        <div className="work__sticky" data-pinned={on || undefined}>
+          <div className="cases" ref={track}
+               style={on ? { transform: `translate3d(${x}px, 0, 0)` } : undefined}
+               role="region" aria-label={work.heading} tabIndex={0}>
         {DATA.cases.map((c, i) => {
           const t = cases[c.id];
           return (
@@ -874,11 +844,12 @@ function Work({ copy, onOpen }) {
             </article>
           );
         })}
-      </div>
+          </div>
 
-      <div className="wrap">
-        <div className="work__progress" role="presentation">
-          <span className="work__progress-bar" style={{ transform: `scaleX(${Math.max(progress, 0.06)})` }} />
+          <div className="work__progress" role="presentation">
+            <span className="work__progress-bar"
+                  style={{ transform: `scaleX(${Math.max(on ? p : 0.06, 0.06)})` }} />
+          </div>
         </div>
       </div>
     </section>
@@ -999,15 +970,25 @@ function Services({ copy }) {
           {services.heading}
         </h2>
       </div>
-      <ul className="services">
-        {services.items.map((s, i) => (
-          <li key={s.n} className="service" data-reveal style={{ '--reveal-delay': `${i * 50}ms` }}>
-            <span className="t-mono">{s.n}</span>
-            <h3 className="t-h3">{s.title}</h3>
-            <p className="service__desc">{s.desc}</p>
-          </li>
-        ))}
-      </ul>
+      <div className="wrap">
+        <ul className="practice">
+          {services.items.map((s, i) => (
+            <li key={s.n} className="practice__row" data-reveal
+                style={{ '--reveal-delay': `${i * 55}ms` }}>
+              <span className="practice__n" aria-hidden="true">{s.n}</span>
+              <div className="practice__body">
+                <h3 className="practice__title">{s.title}</h3>
+                <p className="practice__desc">{s.desc}</p>
+              </div>
+              <ul className="chips practice__tags">
+                {(DATA.serviceTags[i] || []).map((tag) => (
+                  <li key={tag} className="chip">{tag}</li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
@@ -1131,6 +1112,20 @@ function Contact({ copy, onCopy, onCv }) {
   return (
     <section id="contacto" className="section wrap">
       <SectionHead n={nav[5].n} label={contact.label} />
+
+      {/* The email is the point of the section, so it gets display weight
+          rather than sitting in a row like any other field. */}
+      <a className="contact__hero" href={`mailto:${email}`} data-reveal>
+        <span className="contact__hero-label t-mono">{contact.write}</span>
+        <span className="contact__hero-mail">{email}</span>
+        <span className="contact__hero-go" aria-hidden="true"><Icon.arrowRight /></span>
+      </a>
+
+      <p className="contact__status" data-reveal style={{ '--reveal-delay': '80ms' }}>
+        <span className="contact__status-dot" aria-hidden="true" />
+        {contact.available}
+      </p>
+
       <div className="contact__grid">
         <div>
           <h2 className="t-h2" data-reveal style={{ marginBottom: '20px' }}>{contact.heading}</h2>
@@ -1247,7 +1242,7 @@ function App() {
         <Hero copy={copy} onJump={jump} />
         <About copy={copy} />
         <Position copy={copy} />
-        <Marquee />
+
         <Work copy={copy} onOpen={setOpenCase} />
         <Services copy={copy} />
         <Experience copy={copy} />

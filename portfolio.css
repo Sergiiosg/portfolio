@@ -595,7 +595,7 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
 
 .rail {
   position: fixed;
-  right: max(18px, calc((100vw - var(--maxw)) / 2 - 40px));
+  right: 30px;
   top: 50%;
   transform: translateY(-50%);
   z-index: var(--z-rail);
@@ -603,7 +603,9 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
   flex-direction: column;
   gap: 2px;
 }
-@media (min-width: 1180px) { .rail { display: flex; } }
+/* Labels expand leftward on hover, so the rail only appears once the side
+   gutter is genuinely wide enough to hold one without touching content. */
+@media (min-width: 1600px) { .rail { display: flex; } }
 
 .rail__item {
   display: flex;
@@ -792,59 +794,87 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
    11. Position statement
    ============================================================ */
 
-.position { padding-block: clamp(80px, 12vw, 152px); }
+/* A committed colour break: this block is dark in both themes, so the page
+   stops reading as one uninterrupted column. Tokens are redefined rather
+   than colours overridden, so every child inherits correctly. */
+.invert {
+  --bg:        #0A0A0C;
+  --bg-2:      #141418;
+  --surface:   #161619;
+  --fg:        #F5F5F7;
+  --fg-2:      #A1A1A6;
+  --fg-3:      #8E8E93;
+  --fg-4:      #48484D;
+  --rule:      rgba(255, 255, 255, 0.12);
+  --rule-2:    rgba(255, 255, 255, 0.06);
+  --rule-str:  rgba(255, 255, 255, 0.24);
+  --accent:      #2997FF;
+  --accent-soft: rgba(41, 151, 255, 0.16);
+
+  background: var(--bg);
+  color: var(--fg);
+  padding-block: clamp(80px, 12vw, 160px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* A faint grid, masked to a corner, so the slab is not a flat rectangle */
+.invert::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--rule-2) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule-2) 1px, transparent 1px);
+  background-size: 68px 68px;
+  mask-image: radial-gradient(ellipse 70% 80% at 88% 10%, #000, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 88% 10%, #000, transparent 70%);
+  pointer-events: none;
+}
+.invert > * { position: relative; z-index: 1; }
 
 .position__text {
-  font-size: clamp(1.5rem, 3.6vw, 2.75rem);
-  line-height: 1.22;
-  letter-spacing: -0.026em;
+  font-size: clamp(1.625rem, 4vw, 3.125rem);
+  line-height: 1.18;
+  letter-spacing: -0.03em;
   font-weight: 400;
-  max-width: 22ch;
+  max-width: 20ch;
+  margin-top: 22px;
   text-wrap: balance;
 }
 
-.position__attr { margin-top: 26px; }
-
-/* ============================================================
-   11b. Marquee — standards as a moving band
-   ============================================================ */
-
-.marquee {
-  overflow: hidden;
-  border-block: 1px solid var(--rule-2);
-  padding-block: 18px;
-  /* Fades at both edges so it reads as continuous, not clipped */
-  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+.frameworks {
+  margin-top: clamp(48px, 7vw, 88px);
+  padding-top: clamp(28px, 4vw, 44px);
+  border-top: 1px solid var(--rule);
 }
+.frameworks__label { margin-bottom: 20px; }
 
-.marquee__track {
+.frameworks__wall {
   display: flex;
-  width: max-content;
-  animation: marquee 58s linear infinite;
-}
-/* Pausing on hover lets anyone actually read a term */
-@media (hover: hover) and (pointer: fine) {
-  .marquee:hover .marquee__track { animation-play-state: paused; }
+  flex-wrap: wrap;
+  gap: 8px 10px;
 }
 
-@keyframes marquee {
-  to { transform: translate3d(-50%, 0, 0); }
-}
-
-.marquee__item {
-  display: inline-flex;
-  align-items: center;
-  gap: 28px;
-  padding-right: 28px;
+.framework {
   font-family: var(--t-mono);
   font-size: 0.75rem;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--fg-3);
-  white-space: nowrap;
+  color: var(--fg-2);
+  padding: 9px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  transition: border-color 200ms var(--ease-out), color 200ms var(--ease-out),
+              background-color 200ms var(--ease-out);
 }
-.marquee__sep { color: var(--fg-4); }
+@media (hover: hover) and (pointer: fine) {
+  .framework:hover {
+    color: var(--fg);
+    border-color: var(--rule-str);
+    background: var(--bg-2);
+  }
+}
 
 /* ============================================================
    12. Work
@@ -857,36 +887,63 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
   gap: 32px;
   margin-bottom: clamp(32px, 4vw, 56px);
 }
-.work__nav { display: flex; gap: 8px; flex-shrink: 0; }
-@media (max-width: 720px) { .work__nav { display: none; } }
+.ctrl:disabled { opacity: 0.34; cursor: default; transform: none; }
 
-.ctrl:disabled {
-  opacity: 0.34;
-  cursor: default;
-  transform: none;
+.work__count {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.work__count-n {
+  font-family: var(--t-mono);
+  font-size: 2.25rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--fg);
+}
+.work__count-sep { color: var(--fg-4); font-family: var(--t-mono); }
+@media (max-width: 720px) { .work__count { display: none; } }
+
+/* Vertical scroll pans the rail: the outer block is tall enough to absorb
+   the track's overflow, and this viewport stays pinned while it passes. */
+.work__outer { position: relative; }
+
+.work__sticky[data-pinned] {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
 }
 
-/* Horizontal rail. Touch scrolls natively; pointer devices drag. */
 .cases {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: min(430px, 82vw);
   gap: 20px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
   /* Full-bleed rail whose first card still lines up with the container */
   --rail-pad: max(var(--gutter), calc((100vw - var(--maxw)) / 2 + var(--gutter)));
-  scroll-padding-inline: var(--rail-pad);
   padding-inline: var(--rail-pad);
   padding-block: 4px 12px;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  cursor: grab;
 }
 .cases::-webkit-scrollbar { display: none; }
-.cases[data-dragging] { cursor: grabbing; scroll-snap-type: none; }
-.cases[data-dragging] .case { transition: none; }
+
+.work__sticky[data-pinned] .cases { will-change: transform; }
+
+/* Not pinned (small screens, reduced motion): an ordinary swipeable row */
+.work__sticky:not([data-pinned]) .cases {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--rail-pad);
+}
+.work__sticky:not([data-pinned]) .case { scroll-snap-align: start; }
 
 .case {
   display: flex;
@@ -921,11 +978,13 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
 }
 
 .work__progress {
-  margin-top: 22px;
+  margin: 26px auto 0;
+  width: min(var(--maxw), calc(100vw - var(--gutter) * 2));
   height: 2px;
   background: var(--rule);
   border-radius: 2px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 .work__progress-bar {
   display: block;
@@ -1156,26 +1215,78 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
    14. Services
    ============================================================ */
 
-.services {
-  display: grid;
-  gap: 1px;
-  background: var(--rule);
-  border-block: 1px solid var(--rule);
-}
-@media (min-width: 760px) { .services { grid-template-columns: repeat(2, 1fr); } }
+/* Full-width rows with oversized numerals — reads as a table of capability
+   rather than a grid of equal boxes. */
+.practice { display: flex; flex-direction: column; }
 
-.service {
-  background: var(--bg);
-  padding: clamp(26px, 3.4vw, 46px);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  transition: background-color 280ms var(--ease-out);
+.practice__row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 4px 24px;
+  padding-block: clamp(26px, 3.2vw, 42px);
+  border-top: 1px solid var(--rule);
+  position: relative;
+}
+.practice__row:last-child { border-bottom: 1px solid var(--rule); }
+
+/* A wash that wipes in from the left on hover */
+.practice__row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--bg-2), transparent 62%);
+  opacity: 0;
+  transition: opacity 320ms var(--ease-out);
+  pointer-events: none;
 }
 @media (hover: hover) and (pointer: fine) {
-  .service:hover { background: var(--bg-2); }
+  .practice__row:hover::before { opacity: 1; }
+  .practice__row:hover .practice__n { color: var(--fg); }
+  .practice__row:hover .practice__title { transform: translateX(6px); }
 }
-.service__desc { color: var(--fg-2); font-size: 0.9375rem; line-height: 1.62; text-wrap: pretty; }
+
+.practice__n {
+  font-family: var(--t-mono);
+  font-size: clamp(2rem, 5vw, 3.75rem);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--fg-4);
+  position: relative;
+  transition: color 280ms var(--ease-out);
+  min-width: 1.9em;
+}
+
+.practice__body { position: relative; }
+
+.practice__title {
+  font-size: clamp(1.125rem, 2.1vw, 1.625rem);
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  line-height: 1.22;
+  margin-bottom: 9px;
+  transition: transform 320ms var(--ease-out);
+}
+
+.practice__desc {
+  color: var(--fg-2);
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+.practice__tags {
+  grid-column: 2;
+  margin-top: 14px;
+  position: relative;
+}
+@media (max-width: 620px) {
+  .practice__row { grid-template-columns: 1fr; gap: 10px; }
+  .practice__tags { grid-column: 1; }
+  .practice__n { font-size: 1.75rem; }
+}
 
 /* ============================================================
    15. Experience
@@ -1293,6 +1404,77 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
 /* ============================================================
    16. Contact
    ============================================================ */
+
+/* The email carries display weight — it is the action the section exists for */
+.contact__hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 10px 24px;
+  padding-block: clamp(24px, 3vw, 36px);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.contact__hero-label { grid-column: 1; }
+
+.contact__hero-mail {
+  grid-column: 1;
+  font-size: clamp(1.375rem, 5.2vw, 3.5rem);
+  font-weight: 500;
+  letter-spacing: -0.034em;
+  line-height: 1.02;
+  word-break: break-word;
+  transition: transform 380ms var(--ease-out), color 260ms var(--ease-out);
+}
+
+.contact__hero-go {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--rule);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background-color 280ms var(--ease-out), color 280ms var(--ease-out),
+              transform 380ms var(--ease-out), border-color 280ms var(--ease-out);
+}
+.contact__hero-go .icon { width: 18px; height: 18px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .contact__hero:hover .contact__hero-mail { transform: translateX(8px); }
+  .contact__hero:hover .contact__hero-go {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: transparent;
+    transform: translateX(6px);
+  }
+}
+.contact__hero:active .contact__hero-mail { transform: translateX(4px); }
+
+.contact__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.8125rem;
+  color: var(--fg-2);
+  margin-bottom: clamp(48px, 7vw, 88px);
+}
+.contact__status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #1D9E5E;
+  box-shadow: 0 0 0 3px rgba(29, 158, 94, 0.18);
+  animation: pulse 2.6s var(--ease-in-out) infinite;
+}
+[data-theme='dark'] .contact__status-dot {
+  background: #32D583;
+  box-shadow: 0 0 0 3px rgba(50, 213, 131, 0.16);
+}
 
 .contact__grid {
   display: grid;
@@ -1484,7 +1666,6 @@ h1, h2, h3, h4, p, figure, blockquote { margin: 0; }
   .xp__now-dot { animation: none; }
 
   /* The band holds still; the diagrams show their finished state */
-  .marquee__track { animation: none; transform: none; }
   .case__visual svg [pathLength] { stroke-dashoffset: 0; }
   .case[data-revealed] .case__visual svg [pathLength] { animation: none; }
   .case__visual svg { transform: none !important; }
